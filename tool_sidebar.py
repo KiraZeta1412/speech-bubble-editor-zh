@@ -14,6 +14,7 @@ from icons import (
     ICON_SELECT, ICON_MOVE, ICON_BUBBLE,
     ICON_TEXT, ICON_LAYERS, ICON_MEME, ICON_DUAL, ICON_MANGA, ICON_COLLAGE,
     ICON_BLUR, ICON_PIXELATE, ICON_CROP, ICON_SPEEDLINES, ICON_ROTATE,
+    ICON_BRUSH,
 )
 
 # (id, label, normal_svg, shortcut_or_none, checkable, in_tool_group)
@@ -26,6 +27,7 @@ TOOL_DEFS = [
     ("text",    "文字",    ICON_TEXT,    "T",      False, False),
     ("lines",   "线条",   ICON_SPEEDLINES, None,  False, False),
     ("redact",  "打码",    ICON_PIXELATE,None,     False, False),
+    ("brush",   "笔刷",    ICON_BRUSH,   None,     False, False),
     ("layers",  "图层",  ICON_LAYERS,  "Ctrl+L", False, False),
     ("meme",    "梗图",    ICON_MEME,    None,     True,  False),
     ("dual",    "双格",    ICON_DUAL,    None,     True,  False),
@@ -33,7 +35,7 @@ TOOL_DEFS = [
     ("manga",   "漫画",   ICON_MANGA,   None,     True,  False),
 ]
 
-MEDIA_GATED = {"crop", "rotate", "bubble", "text", "lines", "redact",
+MEDIA_GATED = {"crop", "rotate", "bubble", "text", "lines", "redact", "brush",
                "layers", "meme", "dual"}
 
 
@@ -45,6 +47,7 @@ class ToolSidebar(QWidget):
     rotate_requested     = pyqtSignal()
     add_lines_requested  = pyqtSignal()
     add_redact_requested = pyqtSignal()
+    add_brush_requested  = pyqtSignal()
     add_layer_requested  = pyqtSignal()
     meme_toggled         = pyqtSignal(bool)
     dual_toggled         = pyqtSignal(bool)
@@ -90,6 +93,7 @@ class ToolSidebar(QWidget):
         self._buttons["rotate"].clicked.connect(self.rotate_requested)
         self._buttons["lines"].clicked.connect(self.add_lines_requested)
         self._buttons["redact"].clicked.connect(self.add_redact_requested)
+        self._buttons["brush"].clicked.connect(self.add_brush_requested)
         self._buttons["layers"].clicked.connect(self.add_layer_requested)
         self._buttons["meme"].toggled.connect(self.meme_toggled)
         self._buttons["dual"].toggled.connect(self.dual_toggled)
@@ -227,7 +231,7 @@ class ToolSidebar(QWidget):
     def set_manga_mode_active(self, active: bool, base_media_loaded: bool):
         """Enable page-safe tools in Comic mode, including on a blank page."""
         if active:
-            for tool_id in ("bubble", "text", "lines", "redact", "layers"):
+            for tool_id in ("bubble", "text", "lines", "redact", "brush", "layers"):
                 self._buttons[tool_id].setEnabled(True)
             for tool_id in ("crop", "rotate", "meme", "dual"):
                 self._buttons[tool_id].setEnabled(False)

@@ -27,7 +27,8 @@ import bubble_defaults
 import i18n
 from bubble import BubbleItem, TEXT_PRESETS, TAIL_SHAPES
 from media_item import MediaItem
-from redaction import (RedactionItem, STYLE_MOSAIC, STYLE_BLUR, STYLE_FILL)
+from redaction import (RedactionItem, BrushRedactionItem,
+                       STYLE_MOSAIC, STYLE_BLUR, STYLE_FILL)
 from speedlines import SpeedLinesItem
 from undo_commands import (
     TextChangeCommand, StyleChangeCommand, FontChangeCommand,
@@ -1228,17 +1229,38 @@ class InspectorDock(QWidget):
             self._on_redact_feather,
             tooltip="边缘软过渡，0 = 硬边")
 
+        # ── 笔刷专属（只在选中笔刷打码时显示）─────────────────────────
+        self._redact_brush_box = QWidget()
+        brush_lay = QVBoxLayout(self._redact_brush_box)
+        brush_lay.setContentsMargins(0, 0, 0, 0)
+        brush_lay.setSpacing(4)
+        self._redact_brush_size = self._compact_slider_row(
+            brush_lay, "笔刷大小", 2, 200, 44, " px",
+            self._on_redact_brush_size,
+            tooltip="涂抹时画笔的粗细")
+        self._redact_paint_mode = QCheckBox("画笔模式（拖动涂抹）")
+        self._redact_paint_mode.setToolTip(
+            "打开时在画布上拖动是涂抹；关闭时可拖动整块打码")
+        self._redact_paint_mode.toggled.connect(self._on_redact_paint_mode)
+        brush_lay.addWidget(self._redact_paint_mode)
+        self._redact_clear_btn = QPushButton("清除笔迹")
+        self._redact_clear_btn.setToolTip("删掉这块打码的所有涂抹痕迹")
+        self._redact_clear_btn.clicked.connect(self._on_redact_clear_strokes)
+        brush_lay.addWidget(self._redact_clear_btn)
+        section.body_lay.addWidget(self._redact_brush_box)
+
         section.setVisible(False)
         self._redact_section = section
         self._inspector_lay.addWidget(section)
 
     def _sync_redact_visibility(self):
-        """按当前样式显示对应参数。"""
-        mode = (self._redact_item.get_mode()
-                if self._redact_item is not None else STYLE_MOSAIC)
+        """按当前样式显示对应参数；笔刷项额外显示笔刷控件。"""
+        item = self._redact_item
+        mode = item.get_mode() if item is not None else STYLE_MOSAIC
         self._redact_block_box.setVisible(mode == STYLE_MOSAIC)
         self._redact_blur_box.setVisible(mode == STYLE_BLUR)
         self._redact_fill_box.setVisible(mode == STYLE_FILL)
+        self._redact_brush_box.setVisible(isinstance(item, BrushRedactionItem))
 
     def _sync_redact_controls(self):
         """把选中项的参数回填到控件里。"""
@@ -1257,6 +1279,9 @@ class InspectorDock(QWidget):
             _set_btn_color(self._redact_fill_color_btn, item.get_fill_color())
             self._redact_fill_hex.setText(item.get_fill_color().name().upper())
             self._redact_fill_auto.setChecked(item.is_fill_auto())
+            if isinstance(item, BrushRedactionItem):
+                self._redact_brush_size.setValue(item.get_brush_size())
+                self._redact_paint_mode.setChecked(item.is_paint_mode())
         finally:
             self._updating = False
         self._sync_redact_visibility()
@@ -1310,6 +1335,22 @@ class InspectorDock(QWidget):
     def _on_redact_fill_auto(self, checked: bool):
         if self._redact_item and not self._updating:
             self._redact_item.set_fill_auto(checked)
+
+    # ── 笔刷打码 ─────────────────────────────────────────────────────
+    def _on_redact_brush_size(self, value: int):
+        item = self._redact_item
+        if isinstance(item, BrushRedactionItem) and not self._updating:
+            item.set_brush_size(value)
+
+    def _on_redact_paint_mode(self, checked: bool):
+        item = self._redact_item
+        if isinstance(item, BrushRedactionItem) and not self._updating:
+            item.set_paint_mode(checked)
+
+    def _on_redact_clear_strokes(self):
+        item = self._redact_item
+        if isinstance(item, BrushRedactionItem) and not self._updating:
+            item.clear_strokes()
 
     # Reverse-engineered from the reference sheet: a balloon there carries a
     # halftone shadow, radiating strokes, a star, an exclamation mark and little

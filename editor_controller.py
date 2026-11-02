@@ -199,11 +199,21 @@ class EditorController(QObject):
         bubble.setSelected(True)
         return bubble
 
-    def add_redaction(self, x: float, y: float, mode: str = "blur"):
-        """Create a blur/pixelate redaction box at (x, y) on the undo stack."""
+    def add_redaction(self, x: float, y: float, mode: str = "mosaic"):
+        """Create a redaction box at (x, y) on the undo stack."""
         from redaction import RedactionItem
         from undo_commands import AddBubbleCommand
         item = RedactionItem(x, y, mode=mode)
+        self._scene.undo_stack.push(AddBubbleCommand(self._scene, item))
+        self._scene.clearSelection()
+        item.setSelected(True)
+        return item
+
+    def add_brush_redaction(self, x: float, y: float, mode: str = "mosaic"):
+        """Create a freehand brush redaction at (x, y) on the undo stack."""
+        from redaction import BrushRedactionItem
+        from undo_commands import AddBubbleCommand
+        item = BrushRedactionItem(x, y, mode=mode)
         self._scene.undo_stack.push(AddBubbleCommand(self._scene, item))
         self._scene.clearSelection()
         item.setSelected(True)
