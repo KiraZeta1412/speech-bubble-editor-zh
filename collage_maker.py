@@ -19,6 +19,8 @@ import random
 
 from PyQt6.QtCore import QRectF
 
+import custom_layouts
+
 
 COLLAGE_COUNTS = tuple(range(2, 10))
 ASPECT_RATIOS = {
@@ -344,8 +346,32 @@ def _build(name: str, count: int, bounds: QRectF, gap: float,
            rng: random.Random) -> list[QRectF]:
     builder = _LAYOUT_BUILDERS.get(name)
     if builder is None:
+        if custom_layouts.is_custom(name):
+            return _custom_layout_rects(name, bounds)
         return _grid_layout(count, bounds, gap)
     return builder(count, bounds, gap, rng)
+
+
+def _custom_layout_rects(layout_type: str, bounds: QRectF) -> list[QRectF]:
+    """把用户自定义布局的归一化矩形缩放进页面。
+
+    矩形存的是 0..1 的页面相对坐标，所以同一套布局在任何页面比例下都能用。
+    """
+    stored = custom_layouts.get(custom_layouts.custom_name(layout_type))
+    if not stored:
+        return [QRectF(bounds)]
+    rects: list[QRectF] = []
+    for x, y, w, h in stored:
+        rects.append(QRectF(bounds.left() + x * bounds.width(),
+                            bounds.top() + y * bounds.height(),
+                            w * bounds.width(),
+                            h * bounds.height()))
+    return rects
+
+
+def is_known_layout(layout_type: str) -> bool:
+    return (layout_type in LAYOUT_TYPES
+            or custom_layouts.is_custom(layout_type))
 
 
 def layout_rects(count: int, layout_type: str, aspect_name: str = "方形 · 1:1",
@@ -357,7 +383,7 @@ def layout_rects(count: int, layout_type: str, aspect_name: str = "方形 · 1:1
     width, height = page_size(aspect_name)
     bounds = QRectF(margin, margin, max(80.0, width - 2 * margin),
                     max(80.0, height - 2 * margin))
-    chosen = layout_type if layout_type in LAYOUT_TYPES else "自动"
+    chosen = layout_type if is_known_layout(layout_type) else "自动"
     if chosen == "自动":
         chosen = rng.choice(tuple(n for n in LAYOUT_TYPES if n != "自动"))
     return _build(chosen, count, bounds, max(0.0, float(gap)), rng)
@@ -376,8 +402,13 @@ def generate_collage_layout(count: int, layout_type: str = "自动",
     bounds = QRectF(margin, margin, max(80.0, width - 2 * margin),
                     max(80.0, height - 2 * margin))
 
-    chosen = layout_type if layout_type in LAYOUT_TYPES else "自动"
+    chosen = layout_type if is_known_layout(layout_type) else "自动"
     if chosen == "自动":
         chosen = rng.choice(tuple(n for n in LAYOUT_TYPES if n != "自动"))
     rects = _build(chosen, count, bounds, gap, rng)
-    return rects, f"{count} 张照片  ·  {chosen.lower()}  ·  {aspect_name}", (width, height)
+    if custom_layouts.is_custom(chosen):
+        label = custom_layouts.custom_name(chosen)
+        count_text = f"{len(rects)} 张照片  ·  {label}  ·  {aspect_name}"
+    else:
+        count_text = f"{count} 张照片  ·  {chosen.lower()}  ·  {aspect_name}"
+    return rects, count_text, (width, height)

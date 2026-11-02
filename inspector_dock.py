@@ -25,6 +25,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPointF, QRectF
 
 import bubble_defaults
 import collage_maker
+import custom_layouts
 import i18n
 from bubble import BubbleItem, TEXT_PRESETS, TAIL_SHAPES
 from media_item import MediaItem
@@ -277,39 +278,104 @@ class CollageTemplateButton(QToolButton):
 
 
 class CollageTemplateStrip(QWidget):
-    """布局画廊：可滚动的缩略图网格，横向 4 列。"""
+    """布局画廊：4 列缩略图网格，末尾带一个「新建自定义布局」入口。"""
 
     COLUMNS = 4
     currentTextChanged = pyqtSignal(str)
+    custom_requested = pyqtSignal()
+    edit_requested = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._value = ""
         self._buttons = {}
+        self._count = 4
+        self._aspect = "方形 · 1:1"
+        self._vertical = True
         self._group = QButtonGroup(self)
         self._group.setExclusive(True)
 
         # 不套内层滚动区：属性面板本身已经是滚动区，两层滚动会让滚轮事件
-        # 冒到外层，出现「滚小框时大框也跟着动」。12 个布局 4 列 3 行一次看全。
+        # 冒到外层，出现「滚小框时大框也跟着动」。
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
 
-        inner = QWidget()
-        grid = QGridLayout(inner)
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setSpacing(4)
+        self._inner = QWidget()
+        self._grid = QGridLayout(self._inner)
+        self._grid.setContentsMargins(0, 0, 0, 0)
+        self._grid.setSpacing(4)
+        outer.addWidget(self._inner)
+
+        self._rebuild()
+        self.setCurrentText("马赛克")
+
+    # ---- 构建 ----------------------------------------------------------
+
+    def _rebuild(self):
+        """重建整个网格：预设布局 -> 自定义布局 -> 新建入口。"""
+        while self._grid.count():
+            item = self._grid.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
+        self._buttons = {}
+
         names = [n for n in collage_maker.LAYOUT_TYPES if n != "自动"]
-        for index, name in enumerate(names):
-            label = collage_maker.LAYOUT_LABELS.get(name, name)
+        names += [custom_layouts.make_type(n) for n in custom_layouts.names()]
+
+        index = 0
+        for name in names:
+            if custom_layouts.is_custom(name):
+                label = custom_layouts.custom_name(name)
+            else:
+                label = collage_maker.LAYOUT_LABELS.get(name, name)
             btn = CollageTemplateButton(name, label)
+            btn.set_context(self._count, self._aspect, self._vertical)
+            if custom_layouts.is_custom(name):
+                btn.setToolTip(i18n.tr("自定义布局 —— 右键可删除"))
+                btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+                btn.customContextMenuRequested.connect(
+                    lambda _pos, value=name: self._custom_menu(value))
             self._buttons[name] = btn
             self._group.addButton(btn)
-            grid.addWidget(btn, index // self.COLUMNS, index % self.COLUMNS)
+            self._grid.addWidget(btn, index // self.COLUMNS, index % self.COLUMNS)
             btn.clicked.connect(
                 lambda checked, value=name: checked and self._select(value))
-        outer.addWidget(inner)
-        self.setCurrentText("马赛克")
+            index += 1
+
+        # 末尾的「新建」入口
+        self._new_btn = QPushButton("+")
+        self._new_btn.setToolTip(i18n.tr("自己设计拼贴布局"))
+        self._new_btn.setMinimumSize(52, 64)
+        self._new_btn.setMaximumHeight(64)
+        self._new_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._new_btn.clicked.connect(self.custom_requested)
+        self._grid.addWidget(self._new_btn, index // self.COLUMNS,
+                             index % self.COLUMNS)
+
+        selected = self._buttons.get(self._value)
+        if selected is not None:
+            selected.setChecked(True)
+
+    def _custom_menu(self, name: str):
+        menu = QMenu(self)
+        act_edit = menu.addAction(i18n.tr("编辑"))
+        act_del = menu.addAction(i18n.tr("删除布局"))
+        chosen = menu.exec(self.cursor().pos())
+        if chosen == act_edit:
+            self.edit_requested.emit(name)
+        elif chosen == act_del:
+            custom_layouts.delete(custom_layouts.custom_name(name))
+            if self._value == name:
+                self._value = "马赛克"
+            self._rebuild()
+
+    def refresh_custom(self):
+        self._rebuild()
+
+    # ---- 取值 / 设值 ---------------------------------------------------
 
     def _select(self, value):
         self._value = value
@@ -326,13 +392,17 @@ class CollageTemplateStrip(QWidget):
         btn.setChecked(True)
 
     def set_vertical(self, vertical):
+        self._vertical = bool(vertical)
         for btn in self._buttons.values():
-            btn.set_vertical(vertical)
+            btn.set_vertical(self._vertical)
 
     def set_context(self, count: int, aspect: str, vertical: bool = True):
         """把当前照片数量与页面比例传给每个缩略图。"""
+        self._count = max(2, int(count))
+        self._aspect = str(aspect)
+        self._vertical = bool(vertical)
         for btn in self._buttons.values():
-            btn.set_context(count, aspect, vertical)
+            btn.set_context(self._count, self._aspect, self._vertical)
 
     def option_button(self, value):
         return self._buttons.get(str(value))
@@ -2266,6 +2336,10 @@ class InspectorDock(QWidget):
         self._collage_layout_type.currentTextChanged.connect(
             lambda text: self._set_collage_layout_option(
                 "layout_type", text))
+        self._collage_layout_type.custom_requested.connect(
+            self._on_design_custom_layout)
+        self._collage_layout_type.edit_requested.connect(
+            lambda name: self._on_design_custom_layout(name))
         section.body_lay.addWidget(self._collage_layout_type)
 
         shuffle_note = QLabel(
@@ -2381,6 +2455,18 @@ class InspectorDock(QWidget):
     def _set_collage_layout_option(self, key: str, value):
         if not self._updating and self._scene is not None:
             self._scene.set_collage_layout_setting(key, value)
+            if key == "layout_type" and custom_layouts.is_custom(value):
+                # 自定义布局的格子数是固定的，把照片数同步过去，
+                # 否则计数器和画面对不上。
+                cells = len(custom_layouts.get(
+                    custom_layouts.custom_name(value)))
+                if cells:
+                    self._scene.set_collage_layout_setting("photo_count", cells)
+                    self._updating = True
+                    try:
+                        self._collage_count.setValue(cells)
+                    finally:
+                        self._updating = False
             if key == "photo_count":
                 actual = int(
                     self._scene.collage_layout_settings()["photo_count"])
@@ -2404,6 +2490,47 @@ class InspectorDock(QWidget):
         aspect = str(settings.get("aspect_ratio", "方形 · 1:1"))
         horizontal = aspect in ("横版 · 16:9", "照片 · 3:2")
         self._collage_layout_type.set_context(count, aspect, not horizontal)
+
+    def _on_design_custom_layout(self, edit_name: str = ""):
+        """打开布局设计器。edit_name 非空表示编辑已有自定义布局。"""
+        from layout_designer import LayoutDesignerDialog
+
+        settings = {}
+        if self._scene is not None:
+            try:
+                settings = self._scene.collage_layout_settings()
+            except Exception:
+                settings = {}
+        aspect = str(settings.get("aspect_ratio", "方形 · 1:1"))
+        ratio = collage_maker.ASPECT_RATIOS.get(aspect, 1.0)
+
+        initial = None
+        name = ""
+        if edit_name:
+            name = custom_layouts.custom_name(edit_name)
+            initial = custom_layouts.get(name)
+        else:
+            # 以当前排布为起点，比从空白画布开始顺手
+            try:
+                count = int(settings.get("photo_count", 4))
+                rects, _, (pw, ph) = collage_maker.generate_collage_layout(
+                    count, str(settings.get("layout_type", "马赛克")), settings)
+                initial = [[r.x() / pw, r.y() / ph,
+                            r.width() / pw, r.height() / ph] for r in rects]
+            except Exception:
+                initial = None
+
+        dialog = LayoutDesignerDialog(self, aspect=ratio,
+                                      initial=initial, name=name)
+        if dialog.exec() != LayoutDesignerDialog.DialogCode.Accepted:
+            return
+        saved = dialog.result_name()
+        if not custom_layouts.save(saved, dialog.result_rects()):
+            return
+        self._collage_layout_type.refresh_custom()
+        type_name = custom_layouts.make_type(saved)
+        self._collage_layout_type.setCurrentText(type_name)
+        self._set_collage_layout_option("layout_type", type_name)
 
     COLLAGE_ASPECTS = ("竖版 · 4:5", "横版 · 16:9", "方形 · 1:1")
 
