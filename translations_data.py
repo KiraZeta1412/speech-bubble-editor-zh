@@ -4,7 +4,7 @@
 由汉化过程生成的对照表，供 i18n.py 使用。改文案时两边一起改。
 """
 
-EN_TO_ZH = {  # 750 条
+EN_TO_ZH = {  # 751 条
     '  Fit Width  ': '  适应宽度  ',
     '  Fit Window  ': '  适应窗口  ',
     ' Image': ' 图片',
@@ -234,6 +234,7 @@ EN_TO_ZH = {  # 750 条
     'Drag inside to crop · drag out to reorder': '向内拖拽可裁剪 · 向外拖拽可重新排序',
     'Drag on the page to draw photo frames': '在页面上拖动画出照片框',
     'Drag on the page to draw photo frames. Drag a frame to move it, drag its corners to resize, press Delete to remove. Frames cannot overlap or leave the page.': '在页面上拖动画出照片框；拖动框可以移动，拖四角可以缩放，按 Delete 删除。框不能重叠或超出页面。',
+    'Drag on the page to draw photo frames. Drag a frame to move it, drag the corners to scale it, or drag an edge midpoint to stretch it horizontally or vertically. Press Delete to remove. Frames cannot overlap or leave the page, and they snap near edges.': '在页面上拖动画出照片框；拖动框可以移动，拖四角等比缩放，拖边中点可单独水平或竖直拉伸。按 Delete 删除。框不能重叠或超出页面，靠近边缘会自动吸附。',
     'Drag the preview to position the photo. You can also Alt+drag the bubble on the canvas.': '拖动预览可调整照片位置。也可以在画布上按住 Alt 拖动气泡。',
     'Drag the red dot on the canvas to move the focus point.': '在画布上拖动红点可移动焦点。',
     'Drag to move the focus point': '拖动以移动焦点',
@@ -757,7 +758,7 @@ EN_TO_ZH = {  # 750 条
     '＋ Bubble': '＋ 气泡',
 }
 
-ZH_TO_EN = {  # 730 条
+ZH_TO_EN = {  # 731 条
     '  适应宽度  ': '  Fit Width  ',
     '  适应窗口  ': '  Fit Window  ',
     ' px 描边': ' px outline',
@@ -963,6 +964,7 @@ ZH_TO_EN = {  # 730 条
     '在画布上水平居中': 'Center horizontally on canvas',
     '在页面上拖动画出照片框': 'Drag on the page to draw photo frames',
     '在页面上拖动画出照片框；拖动框可以移动，拖四角可以缩放，按 Delete 删除。框不能重叠或超出页面。': 'Drag on the page to draw photo frames. Drag a frame to move it, drag its corners to resize, press Delete to remove. Frames cannot overlap or leave the page.',
+    '在页面上拖动画出照片框；拖动框可以移动，拖四角等比缩放，拖边中点可单独水平或竖直拉伸。按 Delete 删除。框不能重叠或超出页面，靠近边缘会自动吸附。': 'Drag on the page to draw photo frames. Drag a frame to move it, drag the corners to scale it, or drag an edge midpoint to stretch it horizontally or vertically. Press Delete to remove. Frames cannot overlap or leave the page, and they snap near edges.',
     '在预览和导出时静音此视频的音频': "Mute this video's audio during preview and export",
     '均衡': 'Balanced',
     '块大小': 'Block size',

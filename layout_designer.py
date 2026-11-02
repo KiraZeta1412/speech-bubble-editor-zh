@@ -19,8 +19,8 @@ from PyQt6.QtWidgets import (
 import i18n
 
 MIN_SIZE = 0.02        # 最小边长（占页面比例）
-SNAP_TOLERANCE = 0.012  # 吸附容差（占页面比例）
-HANDLE_SIZE = 10        # 缩放手柄的屏幕半径
+SNAP_TOLERANCE = 0.022  # 吸附容差（占页面比例）；给宽一点，靠近边缘就能吸上
+HANDLE_SIZE = 10        # 缩放手柄的命中半径 / 显示尺寸
 
 
 class LayoutDesignCanvas(QWidget):
@@ -37,6 +37,8 @@ class LayoutDesignCanvas(QWidget):
         self._origin = QRectF()
         self._aspect = 1.0
         self._grab_corner = ""
+        self._snap_x: list[float] = [0.0, 1.0]   # 按下时缓存的吸附候选
+        self._snap_y: list[float] = [0.0, 1.0]
         self._grid_size = 0                 # 底纹参考线数量
         self.setMinimumSize(320, 320)
         self.setMouseTracking(True)
@@ -148,10 +150,18 @@ class LayoutDesignCanvas(QWidget):
                              else QColor(129, 144, 164, 60))
             painter.drawRect(box)
             if selected:
-                painter.setBrush(QColor("#ff7a45"))
                 painter.setPen(Qt.PenStyle.NoPen)
-                for corner in self._corner_points(box).values():
-                    painter.drawEllipse(corner, HANDLE_SIZE / 2, HANDLE_SIZE / 2)
+                painter.setBrush(QColor("#ff7a45"))
+                points = self._handle_points(box)
+                for name in ("TL", "TR", "BL", "BR"):
+                    painter.drawEllipse(points[name],
+                                        HANDLE_SIZE / 2, HANDLE_SIZE / 2)
+                # 边中点画成小长条：暗示只能沿一个方向拉伸
+                for name, w, h in (("L", 4, 14), ("R", 4, 14),
+                                   ("T", 14, 4), ("B", 14, 4)):
+                    point = points[name]
+                    painter.drawRect(QRectF(point.x() - w / 2, point.y() - h / 2,
+                                            w, h))
 
         if not self._rects:
             painter.setPen(QColor("#7f8fa3"))
@@ -161,39 +171,73 @@ class LayoutDesignCanvas(QWidget):
             painter.drawText(page, int(Qt.AlignmentFlag.AlignCenter),
                              i18n.tr("在页面上拖动画出照片框"))
 
-    def _corner_points(self, box: QRectF) -> dict[str, QPointF]:
+    def _handle_points(self, box: QRectF) -> dict[str, QPointF]:
+        """8 个手柄：4 个角 + 4 条边的中点（边中点只沿一个方向拉伸）。"""
+        cx = (box.left() + box.right()) / 2
+        cy = (box.top() + box.bottom()) / 2
         return {
             "TL": QPointF(box.left(), box.top()),
             "TR": QPointF(box.right(), box.top()),
             "BL": QPointF(box.left(), box.bottom()),
             "BR": QPointF(box.right(), box.bottom()),
+            "L": QPointF(box.left(), cy),
+            "R": QPointF(box.right(), cy),
+            "T": QPointF(cx, box.top()),
+            "B": QPointF(cx, box.bottom()),
         }
 
-    # ---- 吸附 / 合法性 -------------------------------------------------
+    LEFT_HANDLES = frozenset(("TL", "BL", "L"))
+    RIGHT_HANDLES = frozenset(("TR", "BR", "R"))
+    TOP_HANDLES = frozenset(("TL", "TR", "T"))
+    BOTTOM_HANDLES = frozenset(("BL", "BR", "B"))
+    HANDLE_CURSORS = {
+        "TL": Qt.CursorShape.SizeFDiagCursor,
+        "BR": Qt.CursorShape.SizeFDiagCursor,
+        "TR": Qt.CursorShape.SizeBDiagCursor,
+        "BL": Qt.CursorShape.SizeBDiagCursor,
+        "L": Qt.CursorShape.SizeHorCursor,
+        "R": Qt.CursorShape.SizeHorCursor,
+        "T": Qt.CursorShape.SizeVerCursor,
+        "B": Qt.CursorShape.SizeVerCursor,
+    }
 
-    def _snap(self, rect: QRectF, skip: int) -> QRectF:
-        """把矩形边缘吸附到页面边界和其他矩形的边缘。"""
-        edges_x = [0.0, 1.0]
-        edges_y = [0.0, 1.0]
-        for i, other in enumerate(self._rects):
-            if i == skip:
+    # ---- 吸附 ----------------------------------------------------------
+
+    def _snap_targets(self, skip: int) -> tuple[list[float], list[float]]:
+        """吸附候选：页面边界 + 其他矩形的边缘。按下时算一次就够。"""
+        xs = [0.0, 1.0]
+        ys = [0.0, 1.0]
+        for index, other in enumerate(self._rects):
+            if index == skip:
                 continue
-            edges_x += [other.left(), other.right()]
-            edges_y += [other.top(), other.bottom()]
-        rect = QRectF(rect)
-        for candidate in (rect.left(), rect.right()):
-            for edge in edges_x:
-                if abs(candidate - edge) < SNAP_TOLERANCE:
-                    dx = edge - candidate
-                    rect.moveLeft(rect.left() + dx)
-                    break
-        for candidate in (rect.top(), rect.bottom()):
-            for edge in edges_y:
-                if abs(candidate - edge) < SNAP_TOLERANCE:
-                    dy = edge - candidate
-                    rect.moveTop(rect.top() + dy)
-                    break
-        return rect
+            xs += [other.left(), other.right()]
+            ys += [other.top(), other.bottom()]
+        return xs, ys
+
+    @staticmethod
+    def _snap_value(value: float, targets: list[float]) -> float:
+        """单条边吸附：取容差内最近的候选。"""
+        best = value
+        best_delta = SNAP_TOLERANCE
+        for target in targets:
+            delta = abs(value - target)
+            if delta < best_delta:
+                best = target
+                best_delta = delta
+        return best
+
+    @staticmethod
+    def _snap_delta(values, targets) -> float:
+        """整块平移的吸附量：在若干条边里挑最近的一个偏移。"""
+        best = 0.0
+        best_delta = SNAP_TOLERANCE
+        for value in values:
+            for target in targets:
+                delta = abs(value - target)
+                if delta < best_delta:
+                    best = target - value
+                    best_delta = delta
+        return best
 
     @staticmethod
     def _normalized(rect: QRectF) -> QRectF:
@@ -214,12 +258,38 @@ class LayoutDesignCanvas(QWidget):
                 return False
         return True
 
+    def _clamp_edge(self, rect: QRectF, handle: str, skip: int) -> None:
+        """把被拖的边顶到邻居外侧。
+
+        不做「移动被拒绝」那套（那会表现为拖动时冻结、再突然跳过去），
+        而是让边一路滑过去、顶住邻居停下 —— 手感连续，也不会留缝。
+        """
+        for index, other in enumerate(self._rects):
+            if index == skip:
+                continue
+            x_overlap = (rect.left() < other.right() - 1e-6
+                         and rect.right() > other.left() + 1e-6)
+            y_overlap = (rect.top() < other.bottom() - 1e-6
+                         and rect.bottom() > other.top() + 1e-6)
+            if handle in self.RIGHT_HANDLES and y_overlap:
+                if other.left() >= rect.left() and rect.right() > other.left():
+                    rect.setRight(min(rect.right(), other.left()))
+            if handle in self.LEFT_HANDLES and y_overlap:
+                if other.right() <= rect.right() and rect.left() < other.right():
+                    rect.setLeft(max(rect.left(), other.right()))
+            if handle in self.BOTTOM_HANDLES and x_overlap:
+                if other.top() >= rect.top() and rect.bottom() > other.top():
+                    rect.setBottom(min(rect.bottom(), other.top()))
+            if handle in self.TOP_HANDLES and x_overlap:
+                if other.bottom() <= rect.bottom() and rect.top() < other.bottom():
+                    rect.setTop(max(rect.top(), other.bottom()))
+
     def _hit(self, pos: QPointF) -> tuple[int, str]:
         """返回 (矩形下标, 手柄名)。手柄名空串表示点在矩形内部。"""
         for index in range(len(self._rects) - 1, -1, -1):
             box = self._to_widget(self._rects[index])
             if index == self._selected:
-                for name, point in self._corner_points(box).items():
+                for name, point in self._handle_points(box).items():
                     if (abs(pos.x() - point.x()) <= HANDLE_SIZE
                             and abs(pos.y() - point.y()) <= HANDLE_SIZE):
                         return index, name
@@ -235,6 +305,7 @@ class LayoutDesignCanvas(QWidget):
         pos = event.position()
         index, handle = self._hit(pos)
         self._anchor = self._to_norm(pos)
+        self._snap_x, self._snap_y = self._snap_targets(index)
         if index >= 0:
             self._selected = index
             self._origin = QRectF(self._rects[index])
@@ -251,11 +322,8 @@ class LayoutDesignCanvas(QWidget):
         if self._mode is None:
             index, handle = self._hit(pos)
             if handle:
-                cursors = {"TL": Qt.CursorShape.SizeFDiagCursor,
-                           "BR": Qt.CursorShape.SizeFDiagCursor,
-                           "TR": Qt.CursorShape.SizeBDiagCursor,
-                           "BL": Qt.CursorShape.SizeBDiagCursor}
-                self.setCursor(cursors.get(handle, Qt.CursorShape.CrossCursor))
+                self.setCursor(self.HANDLE_CURSORS.get(
+                    handle, Qt.CursorShape.CrossCursor))
             elif index >= 0:
                 self.setCursor(Qt.CursorShape.SizeAllCursor)
             else:
@@ -263,11 +331,14 @@ class LayoutDesignCanvas(QWidget):
             return
 
         now = self._to_norm(pos)
+
         if self._mode == "new":
             candidate = QRectF(self._origin.topLeft(), now).normalized()
-            candidate = self._snap(candidate, skip=-1)
-            self._origin = candidate
-            self._preview = candidate
+            x1 = self._snap_value(candidate.left(), self._snap_x)
+            x2 = self._snap_value(candidate.right(), self._snap_x)
+            y1 = self._snap_value(candidate.top(), self._snap_y)
+            y2 = self._snap_value(candidate.bottom(), self._snap_y)
+            self._origin = QRectF(QPointF(x1, y1), QPointF(x2, y2)).normalized()
             self.update()
             return
 
@@ -276,7 +347,15 @@ class LayoutDesignCanvas(QWidget):
             dy = now.y() - self._anchor.y()
             candidate = QRectF(self._origin)
             candidate.translate(dx, dy)
-            # 夹在页面内
+            # 吸附：整块平移，所以用偏移量
+            snap = QRectF(candidate)
+            snap.translate(self._snap_delta(
+                (candidate.left(), candidate.right()), self._snap_x),
+                self._snap_delta(
+                (candidate.top(), candidate.bottom()), self._snap_y))
+            if self._is_valid(snap, self._selected):
+                candidate = snap
+            # 夹进页面
             if candidate.left() < 0:
                 candidate.moveLeft(0)
             if candidate.top() < 0:
@@ -285,27 +364,49 @@ class LayoutDesignCanvas(QWidget):
                 candidate.moveRight(1)
             if candidate.bottom() > 1:
                 candidate.moveBottom(1)
-            candidate = self._snap(candidate, skip=self._selected)
-            if self._is_valid(candidate, skip=self._selected):
-                self._rects[self._selected] = candidate
-                self.update()
+            # 与邻居冲突时，退化成单轴滑动（沿邻居边缘滑行），
+            # 而不是整块不动 —— 这样拖起来是连续的。
+            if not self._is_valid(candidate, self._selected):
+                only_x = QRectF(self._origin)
+                only_x.translate(candidate.left() - self._origin.left(), 0)
+                only_y = QRectF(self._origin)
+                only_y.translate(0, candidate.top() - self._origin.top())
+                if self._is_valid(only_x, self._selected):
+                    candidate = only_x
+                elif self._is_valid(only_y, self._selected):
+                    candidate = only_y
+                else:
+                    candidate = QRectF(self._origin)
+            self._rects[self._selected] = candidate
+            self.update()
             return
 
         if self._mode == "resize":
             rect = QRectF(self._origin)
-            corner = self._grab_corner
-            if "L" in corner:
-                rect.setLeft(min(now.x(), rect.right() - MIN_SIZE))
-            if "R" in corner:
-                rect.setRight(max(now.x(), rect.left() + MIN_SIZE))
-            if "T" in corner:
-                rect.setTop(min(now.y(), rect.bottom() - MIN_SIZE))
-            if "B" in corner:
-                rect.setBottom(max(now.y(), rect.top() + MIN_SIZE))
-            rect = self._snap(rect, skip=self._selected)
-            if self._is_valid(rect, skip=self._selected):
-                self._rects[self._selected] = rect
-                self.update()
+            handle = self._grab_corner
+            # 先夹到对边之前，避免拉过头翻转
+            if handle in self.LEFT_HANDLES:
+                x = min(self._snap_value(now.x(), self._snap_x),
+                        self._origin.right() - MIN_SIZE)
+                rect.setLeft(max(0.0, x))
+            if handle in self.RIGHT_HANDLES:
+                x = max(self._snap_value(now.x(), self._snap_x),
+                        self._origin.left() + MIN_SIZE)
+                rect.setRight(min(1.0, x))
+            if handle in self.TOP_HANDLES:
+                y = min(self._snap_value(now.y(), self._snap_y),
+                        self._origin.bottom() - MIN_SIZE)
+                rect.setTop(max(0.0, y))
+            if handle in self.BOTTOM_HANDLES:
+                y = max(self._snap_value(now.y(), self._snap_y),
+                        self._origin.top() + MIN_SIZE)
+                rect.setBottom(min(1.0, y))
+            # 顶住邻居
+            self._clamp_edge(rect, handle, self._selected)
+            if rect.width() >= MIN_SIZE and rect.height() >= MIN_SIZE:
+                if self._is_valid(rect, self._selected):
+                    self._rects[self._selected] = rect
+                    self.update()
 
     def mouseReleaseEvent(self, event):
         if self._mode == "new":
@@ -344,8 +445,9 @@ class LayoutDesignerDialog(QDialog):
         lay.setSpacing(10)
 
         hint = QLabel(i18n.tr(
-            "在页面上拖动画出照片框；拖动框可以移动，拖四角可以缩放，"
-            "按 Delete 删除。框不能重叠或超出页面。"))
+            "在页面上拖动画出照片框；拖动框可以移动，拖四角等比缩放，"
+            "拖边中点可单独水平或竖直拉伸。按 Delete 删除。"
+            "框不能重叠或超出页面，靠近边缘会自动吸附。"))
         hint.setWordWrap(True)
         hint.setObjectName("Muted")
         lay.addWidget(hint)
