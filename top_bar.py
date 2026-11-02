@@ -37,6 +37,7 @@ class TopBar(QWidget):
     about_requested       = pyqtSignal()
     shortcuts_requested   = pyqtSignal()
     zoom_changed          = pyqtSignal(object)   # int (percent) or str ("fit-width"/"fit-window")
+    language_changed      = pyqtSignal(str)      # "zh" / "en"
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(52)
@@ -147,6 +148,17 @@ class TopBar(QWidget):
 
         lay.addStretch(1)
 
+        # ── Language toggle（中 / EN）──────────────────────────────────
+        # objectName 固定为 LangToggle：i18n 会跳过它，避免"中文"被翻成"Chinese"。
+        self.btn_lang = QPushButton()
+        self.btn_lang.setObjectName("LangToggle")
+        self.btn_lang.setFixedHeight(32)
+        self.btn_lang.setMinimumWidth(56)
+        self.btn_lang.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_lang.clicked.connect(self._toggle_language)
+        self._sync_lang_button()
+        lay.addWidget(self.btn_lang)
+
         # ── Right icon buttons ─────────────────────────────────────────
         self.btn_shortcuts = self._icon_btn(
             make_icon(ICON_KEYBOARD, 20, MUTED),
@@ -189,6 +201,28 @@ class TopBar(QWidget):
         btn.setFixedSize(32, 32)
         btn.setToolTip(tooltip)
         return btn
+
+    # ------------------------------------------------------------------
+    # 语言切换
+    # ------------------------------------------------------------------
+
+    def _sync_lang_button(self):
+        """按钮上显示"将要切换到的"语言。"""
+        import i18n
+        if i18n.language() == "en":
+            self.btn_lang.setText("中文")
+            self.btn_lang.setToolTip("把界面切换回中文")
+        else:
+            self.btn_lang.setText("EN")
+            self.btn_lang.setToolTip("Switch the interface to English")
+
+    def _toggle_language(self):
+        import i18n
+        i18n.set_language("zh" if i18n.language() == "en" else "en")
+        root = self.window()
+        i18n.apply_language(root if root is not None else self)
+        self._sync_lang_button()
+        self.language_changed.emit(i18n.language())
 
     def _separator(self) -> QFrame:
         sep = QFrame()

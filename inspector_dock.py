@@ -24,6 +24,7 @@ from PyQt6.QtGui import (QColor, QFont, QFontDatabase, QPainter, QPainterPath,
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPointF, QRectF
 
 import bubble_defaults
+import i18n
 from bubble import BubbleItem, TEXT_PRESETS, TAIL_SHAPES
 from media_item import MediaItem
 from redaction import RedactionItem
@@ -177,7 +178,8 @@ class PhotoCountStepper(QWidget):
         self.valueChanged.emit(value)
 
     def _sync(self):
-        self._label.setText(f"{self._value} 张照片")
+        import i18n
+        self._label.setText(f"{self._value} " + i18n.tr("张照片"))
         self._remove.setEnabled(self._value > 2)
         self._add.setEnabled(self._value < 9)
 
@@ -253,7 +255,7 @@ class CollageTemplateButton(QToolButton):
         font.setBold(selected)
         painter.setFont(font)
         painter.drawText(QRectF(2, 51, self.width()-4, 16),
-                         int(Qt.AlignmentFlag.AlignCenter), self.label)
+                         int(Qt.AlignmentFlag.AlignCenter), i18n.tr(self.label))
 
 
 class CollageTemplateStrip(QWidget):
@@ -1028,8 +1030,8 @@ class InspectorDock(QWidget):
         self._layers_stack.addWidget(self._layers_list)
 
         self._layers_empty = QLabel(
-            "No editable layers yet.\n\n添加 a bubble, image layer, blur, pixelate, "
-            "or speed lines to start building the stack.")
+            "还没有可编辑的图层。\n\n添加气泡、图片图层、模糊、像素化或速度线，"
+            "即可开始搭建图层栈。")
         self._layers_empty.setObjectName("LayersEmptyState")
         self._layers_empty.setWordWrap(True)
         self._layers_empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -2332,8 +2334,9 @@ class InspectorDock(QWidget):
             self._collage_preset_combo.setCurrentIndex(max(0, index))
         self._collage_preset_combo.blockSignals(False)
         default = collage_presets.default_name()
+        import i18n as _i18n
         self._collage_default_preset.setText(
-            f"启动预设： {default or collage_presets.FACTORY_NAME}")
+            f"{_i18n.tr('启动预设：')} {default or collage_presets.FACTORY_NAME}")
 
     def _selected_collage_preset_name(self) -> str:
         if not hasattr(self, "_collage_preset_combo"):

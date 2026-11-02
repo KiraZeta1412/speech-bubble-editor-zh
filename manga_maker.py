@@ -19,6 +19,8 @@ from PyQt6.QtWidgets import (
     QGraphicsRectItem,
 )
 
+import i18n
+
 
 PAGE_WIDTH = 1600.0
 PAGE_HEIGHT = 2263.0
@@ -395,7 +397,7 @@ class MangaPanelItem(QGraphicsObject):
             painter.drawText(
                 label_rect,
                 int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop),
-                "点击打开图片\n双击或拖放",
+                i18n.tr("点击打开图片\n双击或拖放"),
             )
         else:
             painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)

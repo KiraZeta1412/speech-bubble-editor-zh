@@ -171,6 +171,13 @@ def main():
         app.setOrganizationName("Long Weekend Labs")
         _logger.info("QApplication created OK")
 
+        # 语言：先读上次的选择，再装自动翻译过滤器。
+        # 顺序很重要 —— 界面构建时若已是英文，控件一显示就会被翻成英文。
+        import i18n
+        i18n.load_language()
+        i18n.install(app)
+        _logger.info(f"language = {i18n.language()}")
+
         # Fast-fail before building the window if another instance is running
         if not diagnostic and _check_duplicate_instance():
             _logger.info("duplicate instance detected — exiting")
@@ -196,6 +203,11 @@ def main():
         _logger.info("creating MainWindow…")
         window = MainWindow()
         _logger.info("MainWindow created OK")
+
+        # 兜底：把整棵窗口树再扫一遍，确保启动时就显示目标语言。
+        if i18n.language() != "zh":
+            i18n.apply_language(window)
+            window.top_bar._sync_lang_button()
 
         if not diagnostic:
             _start_single_instance_server(window)
