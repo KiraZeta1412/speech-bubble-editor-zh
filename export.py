@@ -17,6 +17,7 @@ from PyQt6.QtGui import QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import QFileDialog, QMessageBox, QProgressDialog, QApplication
 
 from video_player import VideoPlayer
+import file_dialogs
 
 
 def _find_ffmpeg() -> str | None:
@@ -130,7 +131,7 @@ def _save_dialog(parent, title: str, default_stem: str) -> str:
     Qt 保存对话框的文件名默认是 .png。用户在下拉里选了 JPEG 却没改文件名时，
     过去会静默存成 PNG —— 这里按所选过滤器把扩展名纠正过来。
     """
-    path, chosen = QFileDialog.getSaveFileName(
+    path, chosen = file_dialogs.save_file(
         parent, title, f"{default_stem}.png", SAVE_FILTERS)
     if not path:
         return ""
@@ -283,7 +284,7 @@ def export_video(parent, scene, photo_item, player: VideoPlayer,
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     default_name = f"{base}-{timestamp}.mp4"
 
-    out_path, _ = QFileDialog.getSaveFileName(
+    out_path, _ = file_dialogs.save_file(
         parent, "导出视频", default_name,
         "MP4 (*.mp4);;AVI (*.avi);;MKV (*.mkv)"
     )

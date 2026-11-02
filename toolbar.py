@@ -2,11 +2,12 @@
 toolbar.py — Top toolbar: Open, Export, Undo, Redo, Meme, Dual, About.
 """
 
-from PyQt6.QtWidgets import QToolBar, QFileDialog, QWidget, QSizePolicy
+from PyQt6.QtWidgets import QToolBar, QWidget, QSizePolicy
 from PyQt6.QtGui import QAction, QKeySequence
 from PyQt6.QtCore import pyqtSignal, QSize
 
 from constants import VIDEO_EXTENSIONS, IMAGE_EXTENSIONS
+from file_dialogs import open_file
 ALL_EXTENSIONS   = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
 
 
@@ -125,10 +126,10 @@ class MainToolbar(QToolBar):
 
     def _on_open(self):
         ext_list = " ".join(f"*{e}" for e in ALL_EXTENSIONS)
-        path, _ = QFileDialog.getOpenFileName(
-            self, "打开媒体", "",
-            f"所有支持的媒体 ({ext_list})"
-        )
+        # 走 file_dialogs.open_file：它会从上次打开的文件夹起步并记住这次的目录。
+        # 以前这里直接调 QFileDialog 且目录传空字符串，导致每次都从软件所在目录开始。
+        path = open_file(
+            self, "打开媒体", f"所有支持的媒体 ({ext_list})")
         if path:
             self.open_media_requested.emit(path)
 

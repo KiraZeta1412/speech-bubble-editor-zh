@@ -6,6 +6,36 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Platforms](https://img.shields.io/badge/platform-Windows%20x64%20%7C%20Linux%20x64%20%7C%20macOS%20Apple%20Silicon-lightgrey?style=flat-square)](https://longweekendlabs.github.io/speech-bubble-editor/)
 
+---
+
+## 🇨🇳 简体中文汉化版
+
+**这个 fork 是中文汉化版**，界面已全量中文化（约 1080 处文案），并额外做了几处改进：
+
+| 内容 | 说明 |
+|---|---|
+| 界面汉化 | 工具栏、顶栏、属性面板四页、对话框、状态栏、撤销历史、提示全部中文 |
+| 中文字体兜底 | 内置 Noto Sans SC，未装中文字体的 Windows 也不会显示方块 |
+| 拼贴 1:1 方图 | 除竖向 4:5 / 横向 16:9，新增方形 1:1 页面 |
+| 导出 JPG 修复 | 扩展名跟随所选格式；JPEG 自动垫白底，不会出现黑底 |
+| 记住上次文件夹 | 导入图片和导出时，从上次用过的目录开始 |
+| 单文件打包 | `sbe_zh_onefile.spec`，可自行打包成免安装 exe |
+
+**📖 完整使用说明、汉化范围、验证结果 → [汉化说明.md](汉化说明.md)**
+
+打包成 exe（免安装）：
+
+```powershell
+python -m PyInstaller --noconfirm --clean --distpath dist --workpath build sbe_zh_onefile.spec
+```
+
+从源码启动（需要 Python + PyQt6）：双击 `start.bat`，或 `python start_zh.py`
+
+> 本 fork 基于 [longweekendlabs/speech-bubble-editor](https://github.com/longweekendlabs/speech-bubble-editor) v4.5.2，
+> 遵循原项目 MIT 许可，保留全部原始版权声明。上游仓库不受本 fork 影响。
+
+---
+
 Drop a photo in, say something over it, and you are done. Speech Bubble Editor turns a picture into a comic panel, a meme, a collage, or a captioned video clip, with hand-drawn bubbles that actually look drawn. Everything runs on your own machine: no account, no upload, no subscription.
 
 ### [Download for Windows, Linux, and macOS](https://github.com/longweekendlabs/speech-bubble-editor/releases/latest)
