@@ -6,7 +6,7 @@ Hand-coding each silhouette out of ellipses and star polygons is what made the
 old shapes look mechanical. Here a shape is path data drawn in any vector tool,
 normalised to a 100x100 box, and scaled to whatever the bubble's body rect is.
 
-Adding a shape = adding one line to SHAPE_PATHS. No new drawing code, and the
+添加ing a shape = adding one line to SHAPE_PATHS. No new drawing code, and the
 inspector's preview tiles pick it up automatically because they render the very
 same path.
 

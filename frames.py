@@ -19,12 +19,12 @@ from PyQt6.QtCore import Qt, QRect
 # Percentages are of the image's short side, so a frame looks the same on any
 # resolution.
 FRAME_STYLES = (
-    ("none",    "None",   0.000, 0.000, "No frame"),
-    ("thin",    "Thin",   0.012, 0.000, "Thin border"),
-    ("thick",   "Thick",  0.045, 0.000, "Thick border"),
-    ("inner",   "Inner",  0.045, 0.008, "Thick border with an inner keyline"),
-    ("double",  "Double", 0.055, 0.016, "Two-tone double border"),
-    ("polaroid","Photo",  0.040, 0.000, "Photo print: wide base for a caption"),
+    ("none",    "None",   0.000, 0.000, "无画框"),
+    ("thin",    "细线",   0.012, 0.000, "细边框"),
+    ("thick",   "粗线",  0.045, 0.000, "粗边框"),
+    ("inner",   "内线",  0.045, 0.008, "带内描线的粗边框"),
+    ("double",  "双层", 0.055, 0.016, "双色双边框"),
+    ("polaroid","照片",  0.040, 0.000, "冲印风格：加宽底边用于说明文字"),
 )
 
 FRAME_COLORS = (

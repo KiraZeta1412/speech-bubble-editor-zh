@@ -24,7 +24,7 @@ class AboutDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(f"About {__app_name__}")
+        self.setWindowTitle(f"关于 {__app_name__}")
         self.setFixedWidth(440)
         self.setModal(True)
         self._build()
@@ -54,7 +54,7 @@ class AboutDialog(QDialog):
         layout.addWidget(name_label)
 
         # ── Version ──────────────────────────────────────────────────────
-        ver_label = QLabel(f"Version {__version__}")
+        ver_label = QLabel(f"版本 {__version__}")
         f2 = QFont()
         f2.setPointSize(11)
         ver_label.setFont(f2)
@@ -89,8 +89,8 @@ class AboutDialog(QDialog):
 
         # ── License ──────────────────────────────────────────────────────
         license_text = (
-            "Official release builds: Windows x64 and Linux x64.\n\n"
-            "Built with: Python · PyQt6 · OpenCV · FFmpeg · Pillow\n"
+            "官方发行版：Windows x64 与 Linux x64。\n\n"
+            "技术构成：Python · PyQt6 · OpenCV · FFmpeg · Pillow\n"
             f"{__copyright__}"
         )
         lic_label = QLabel(license_text)
@@ -100,7 +100,7 @@ class AboutDialog(QDialog):
         layout.addWidget(lic_label)
 
         # ── Close button ─────────────────────────────────────────────────
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton("关闭")
         close_btn.setFixedWidth(100)
         close_btn.clicked.connect(self.accept)
         h = QHBoxLayout()

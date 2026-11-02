@@ -71,7 +71,7 @@ class ContextToolbar(QWidget):
         lay.addWidget(self._selection_group, stretch=1)
 
         # ── Selection chip ─────────────────────────────────────────────
-        self._chip = QLabel("Bubble selected")
+        self._chip = QLabel("已选中气泡")
         self._chip.setObjectName("ContextChip")
         self._chip.setFixedHeight(24)
         # Fixed width: the chip's text changes with the selection, and letting
@@ -83,12 +83,12 @@ class ContextToolbar(QWidget):
 
         # ── Alignment group ────────────────────────────────────────────
         ALIGN = [
-            (ICON_ALIGN_LEFT,    "left",    "Align left edge to canvas"),
-            (ICON_ALIGN_HCENTER, "hcenter", "Center horizontally on canvas"),
-            (ICON_ALIGN_RIGHT,   "right",   "Align right edge to canvas"),
-            (ICON_ALIGN_TOP,     "top",     "Align top edge to canvas"),
-            (ICON_ALIGN_VCENTER, "vcenter", "Center vertically on canvas"),
-            (ICON_ALIGN_BOTTOM,  "bottom",  "Align bottom edge to canvas"),
+            (ICON_ALIGN_LEFT,    "left",    "左边缘对齐画布"),
+            (ICON_ALIGN_HCENTER, "hcenter", "在画布上水平居中"),
+            (ICON_ALIGN_RIGHT,   "right",   "右边缘对齐画布"),
+            (ICON_ALIGN_TOP,     "top",     "上边缘对齐画布"),
+            (ICON_ALIGN_VCENTER, "vcenter", "在画布上垂直居中"),
+            (ICON_ALIGN_BOTTOM,  "bottom",  "下边缘对齐画布"),
         ]
         for svg, mode, tip in ALIGN:
             btn = self._ctx_btn(svg, tip)
@@ -100,10 +100,10 @@ class ContextToolbar(QWidget):
 
         # ── Layer order ────────────────────────────────────────────────
         ORDER = [
-            (ICON_TO_FRONT,  "front",    "Bring to front — above all layers"),
-            (ICON_BRING_FWD, "forward",  "Bring forward — one layer up"),
-            (ICON_SEND_BACK, "backward", "Send backward — one layer down"),
-            (ICON_TO_BACK,   "back",     "Send to back — behind all layers"),
+            (ICON_TO_FRONT,  "front",    "移到最前 — 置于所有图层之上"),
+            (ICON_BRING_FWD, "forward",  "上移一层 — 向上移动一层"),
+            (ICON_SEND_BACK, "backward", "下移一层 — 向下移动一层"),
+            (ICON_TO_BACK,   "back",     "移到最底 — 置于所有图层之下"),
         ]
         for svg, mode, tip in ORDER:
             btn = self._ctx_btn(svg, tip)
@@ -114,12 +114,12 @@ class ContextToolbar(QWidget):
         normal.addWidget(self._sep())
 
         # ── Transform ─────────────────────────────────────────────────
-        flip_h_btn = self._ctx_btn(ICON_FLIP_H, "Flip horizontal")
+        flip_h_btn = self._ctx_btn(ICON_FLIP_H, "水平翻转")
         flip_h_btn.clicked.connect(self.flip_h_requested)
         self._action_widgets.append(flip_h_btn)
         normal.addWidget(flip_h_btn)
 
-        flip_v_btn = self._ctx_btn(ICON_FLIP_V, "Flip vertical")
+        flip_v_btn = self._ctx_btn(ICON_FLIP_V, "垂直翻转")
         flip_v_btn.clicked.connect(self.flip_v_requested)
         self._action_widgets.append(flip_v_btn)
         normal.addWidget(flip_v_btn)
@@ -127,7 +127,7 @@ class ContextToolbar(QWidget):
         normal.addWidget(self._sep())
 
         # ── Delete ────────────────────────────────────────────────────
-        del_btn = self._ctx_btn(ICON_DELETE, "Delete selected bubble  (Del)",
+        del_btn = self._ctx_btn(ICON_DELETE, "删除选中的气泡  (Del)",
                                 danger=True)
         del_btn.setObjectName("ContextDeleteBtn")
         del_btn.clicked.connect(self.delete_requested)
@@ -142,31 +142,31 @@ class ContextToolbar(QWidget):
         manga.setContentsMargins(0, 0, 0, 0)
         manga.setSpacing(6)
 
-        self._page_mode_chip = QLabel("COMIC MAKER")
+        self._page_mode_chip = QLabel("漫画制作")
         self._page_mode_chip.setObjectName("MangaChip")
         self._page_mode_chip.setFixedHeight(24)
         manga.addWidget(self._page_mode_chip)
-        self._manga_layout_label = QLabel("Random page")
+        self._manga_layout_label = QLabel("随机页面")
         self._manga_layout_label.setObjectName("MangaLayoutLabel")
         manga.addWidget(self._manga_layout_label)
         manga.addStretch()
 
-        self._page_hint = QLabel("Drag inside to crop · drag out to reorder")
+        self._page_hint = QLabel("向内拖拽可裁剪 · 向外拖拽可重新排序")
         self._page_hint.setObjectName("MangaHint")
         self._page_hint.setToolTip(
-            "Click a panel to select it, then drag the image inside its frame to crop")
+            "点击分格将其选中，然后在画框内拖动图片即可裁剪")
         manga.addWidget(self._page_hint)
 
-        zoom_label = QLabel("Scale")
+        zoom_label = QLabel("缩放")
         zoom_label.setObjectName("MangaHint")
         zoom_label.setToolTip(
-            "Resize the selected image inside the panel without changing the panel")
+            "在不改变分格的情况下调整分格内选中图片的大小")
         manga.addWidget(zoom_label)
         self._manga_zoom = QSlider(Qt.Orientation.Horizontal)
         self._manga_zoom.setRange(10, 500)
         self._manga_zoom.setValue(100)
         self._manga_zoom.setFixedWidth(130)
-        self._manga_zoom.setToolTip("Resize the selected image inside its panel")
+        self._manga_zoom.setToolTip("调整分格内选中图片的大小")
         self._manga_zoom.valueChanged.connect(self._on_manga_zoom)
         manga.addWidget(self._manga_zoom)
         self._manga_zoom_value = QLabel("100%")
@@ -174,17 +174,17 @@ class ContextToolbar(QWidget):
         self._manga_zoom_value.setFixedWidth(42)
         manga.addWidget(self._manga_zoom_value)
 
-        fit = QPushButton("Show all")
+        fit = QPushButton("显示全部")
         fit.setToolTip(
-            "Shrink the selected photo until the entire image is visible")
+            "缩小选中的照片，直到整张图片都可见")
         fit.setFixedHeight(26)
         fit.clicked.connect(self.manga_fit_requested)
         manga.addWidget(fit)
 
-        self._page_regenerate = QPushButton("↻  Regenerate")
+        self._page_regenerate = QPushButton("↻  重新生成")
         self._page_regenerate.setObjectName("MangaRegenerateBtn")
         self._page_regenerate.setToolTip(
-            "Create a different 4, 6, 7, or 8-panel comic page")
+            "生成另一种 4、6、7 或 8 格漫画页面")
         self._page_regenerate.setFixedHeight(26)
         self._page_regenerate.clicked.connect(self.manga_regenerate_requested)
         manga.addWidget(self._page_regenerate)
@@ -198,7 +198,7 @@ class ContextToolbar(QWidget):
         self._idle_group = QWidget()
         idle = QHBoxLayout(self._idle_group)
         idle.setContentsMargins(4, 0, 4, 0)
-        idle_hint = QLabel("Select a bubble or layer for alignment and arrange controls")
+        idle_hint = QLabel("选择气泡或图层以使用对齐与排列控制")
         idle_hint.setObjectName("ContextIdleHint")
         idle.addWidget(idle_hint)
         idle.addStretch()
@@ -212,10 +212,10 @@ class ContextToolbar(QWidget):
 
     def _refresh_page_hint(self):
         unit = "frame" if self._page_mode == "collage" else "panel"
-        self._page_hint.setText("Drag inside to crop · drag out to reorder")
+        self._page_hint.setText("向内拖拽可裁剪 · 向外拖拽可重新排序")
         self._page_hint.setToolTip(
-            f"Drag inside the active {unit} to reposition its crop. Continue "
-            f"outside toward another {unit} to move/swap; Shift-drag reorders immediately.")
+            f"在激活的{unit}内拖动可重新定位裁剪；继续拖到"
+            f"外部的另一{unit}上可移动或交换；按住 Shift 拖动可立即重排。")
 
     # ------------------------------------------------------------------
 
@@ -246,7 +246,7 @@ class ContextToolbar(QWidget):
         self._idle_group.hide()
         self._selection_group.show()
         self._manga_group.hide()
-        self._chip.setText("Bubble selected")
+        self._chip.setText("已选中气泡")
         self._set_actions_enabled(True)
 
     def show_for_media(self):
@@ -254,7 +254,7 @@ class ContextToolbar(QWidget):
         self._idle_group.hide()
         self._selection_group.show()
         self._manga_group.hide()
-        self._chip.setText("Layer selected")
+        self._chip.setText("已选中图层")
         self._set_actions_enabled(True)
 
     def hide_toolbar(self):
@@ -280,15 +280,15 @@ class ContextToolbar(QWidget):
         if mode is not None:
             self._page_mode = mode
         if mode == "collage":
-            self._page_mode_chip.setText("PHOTO COLLAGE")
-            self._page_regenerate.setText("↻  Shuffle")
+            self._page_mode_chip.setText("照片拼贴")
+            self._page_regenerate.setText("↻  随机排列")
             self._page_regenerate.setToolTip(
-                "Try a different collage layout while keeping your photos")
+                "保留照片的同时尝试另一种拼贴布局")
         else:
-            self._page_mode_chip.setText("COMIC MAKER")
-            self._page_regenerate.setText("↻  Regenerate")
+            self._page_mode_chip.setText("漫画制作")
+            self._page_regenerate.setText("↻  重新生成")
             self._page_regenerate.setToolTip(
-                "Create another comic composition with the current Shape settings")
+                "使用当前形状设置生成另一种漫画构图")
         self._refresh_page_hint()
         if mode is not None:
             self.set_manga_zoom(100, False)

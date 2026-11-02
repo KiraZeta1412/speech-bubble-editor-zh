@@ -364,10 +364,10 @@ class MediaItem(QGraphicsObject):
 
     def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent):
         menu = QMenu()
-        act_lock = menu.addAction("Lock Aspect Ratio")
+        act_lock = menu.addAction("锁定宽高比")
         act_lock.setCheckable(True)
         act_lock.setChecked(self._lock_ratio)
-        act_lock.setToolTip("Hold Shift while dragging a corner to lock ratio temporarily")
+        act_lock.setToolTip("拖动角点时按住 Shift 可临时锁定比例")
 
         act_front    = None
         act_forward  = None
@@ -377,12 +377,12 @@ class MediaItem(QGraphicsObject):
 
         if self._is_overlay:
             menu.addSeparator()
-            act_front    = menu.addAction("Bring to Front")
-            act_forward  = menu.addAction("Bring Forward")
-            act_backward = menu.addAction("Send Backward")
-            act_back     = menu.addAction("Send to Back")
+            act_front    = menu.addAction("置于顶层")
+            act_forward  = menu.addAction("上移一层")
+            act_backward = menu.addAction("下移一层")
+            act_back     = menu.addAction("置于底层")
             menu.addSeparator()
-            act_remove = menu.addAction("Remove Layer")
+            act_remove = menu.addAction("删除图层")
 
         chosen = menu.exec(event.screenPos())
         sc = self.scene()

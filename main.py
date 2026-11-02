@@ -128,6 +128,22 @@ def _load_fonts():
             if fname.lower().endswith((".ttf", ".otf")):
                 QFontDatabase.addApplicationFont(
                     os.path.join(fonts_dir, fname))
+    # 汉化版：把随包分发的中文字体加入应用字体回退链。
+    # 界面主字体 Inter 没有中文字形，没有这一层时，未装中文字体的 Windows
+    # 会把中文渲染成方块。
+    try:
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtWidgets import QApplication
+        app = QApplication.instance()
+        if app is not None:
+            f = QFont(app.font())
+            fams = [x for x in (f.families() or [f.family()]) if x]
+            if "Noto Sans SC" not in fams:
+                fams.append("Noto Sans SC")
+            f.setFamilies(fams)
+            app.setFont(f)
+    except Exception:
+        pass
     _logger.info("fonts loaded (deferred)")
 
 
@@ -159,8 +175,8 @@ def main():
         if not diagnostic and _check_duplicate_instance():
             _logger.info("duplicate instance detected — exiting")
             from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.information(None, "Already Running",
-                                    "Speech Bubble Editor is already open.")
+            QMessageBox.information(None, "已在运行",
+                                    "Speech Bubble Editor 已在运行。")
             sys.exit(0)
         _logger.info("single-instance check passed")
 

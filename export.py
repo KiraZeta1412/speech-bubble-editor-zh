@@ -41,7 +41,7 @@ def export_photo(parent, scene, photo_item, right_photo_item=None, is_dual=False
     In dual mode:   side-by-side composite of left + right at their native sizes.
     """
     if photo_item is None or photo_item.pixmap().isNull():
-        QMessageBox.warning(parent, "Export", "No photo loaded.")
+        QMessageBox.warning(parent, "导出", "未加载照片。")
         return
 
     # Render first, so the frame dialog can preview the real composited photo.
@@ -66,12 +66,7 @@ def export_photo(parent, scene, photo_item, right_photo_item=None, is_dual=False
     src_path = getattr(photo_item, '_source_path', '')
     base = os.path.splitext(os.path.basename(src_path))[0] if src_path else "photo"
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    default_name = f"{base}-{timestamp}.png"
-
-    path, _ = QFileDialog.getSaveFileName(
-        parent, "Export Photo", default_name,
-        "PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp)"
-    )
+    path = _save_dialog(parent, "导出照片", f"{base}-{timestamp}")
     if not path:
         return
 
@@ -124,22 +119,60 @@ def _render_dual_photo(scene, left_item, right_item) -> QImage:
     return image
 
 
+# 保存对话框的格式过滤器，与扩展名映射
+SAVE_FILTERS = "PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp)"
+_FILTER_EXT = {"PNG": ".png", "JPEG": ".jpg", "WebP": ".webp"}
+
+
+def _save_dialog(parent, title: str, default_stem: str) -> str:
+    """选格式 + 选路径，并让扩展名跟随所选格式。
+
+    Qt 保存对话框的文件名默认是 .png。用户在下拉里选了 JPEG 却没改文件名时，
+    过去会静默存成 PNG —— 这里按所选过滤器把扩展名纠正过来。
+    """
+    path, chosen = QFileDialog.getSaveFileName(
+        parent, title, f"{default_stem}.png", SAVE_FILTERS)
+    if not path:
+        return ""
+    want = _FILTER_EXT.get((chosen or "PNG").split(" ")[0], ".png")
+    root, ext = os.path.splitext(path)
+    ext_l = ext.lower()
+    matches = (
+        (want == ".jpg" and ext_l in (".jpg", ".jpeg"))
+        or (want == ".png" and ext_l == ".png")
+        or (want == ".webp" and ext_l == ".webp")
+    )
+    if not matches:
+        path = root + want
+    return path
+
+
 def _save_image(parent, image: QImage, path: str):
     ext = os.path.splitext(path)[1].lower()
-    quality = -1
-    if ext in ('.jpg', '.jpeg'):
-        quality = 95
-    ok = image.save(path, quality=quality)
-    if ok:
-        QMessageBox.information(parent, "Export", f"Saved to:\n{path}")
+    fmt = {".jpg": "JPEG", ".jpeg": "JPEG",
+           ".webp": "WEBP", ".png": "PNG"}.get(ext, "PNG")
+    if fmt == "JPEG":
+        # JPEG 不支持透明：先垫一层白底，否则半透明/空白区域会变黑
+        flat = QImage(image.size(), QImage.Format.Format_RGB32)
+        flat.fill(Qt.GlobalColor.white)
+        painter = QPainter(flat)
+        painter.drawImage(0, 0, image)
+        painter.end()
+        ok = flat.save(path, fmt, 95)
+    elif fmt == "WEBP":
+        ok = image.save(path, fmt, 90)
     else:
-        QMessageBox.critical(parent, "Export", f"Failed to save:\n{path}")
+        ok = image.save(path, fmt)
+    if ok:
+        QMessageBox.information(parent, "导出", f"已保存到：\n{path}")
+    else:
+        QMessageBox.critical(parent, "导出", f"保存失败：\n{path}")
 
 
 def export_manga_photo(parent, scene):
     """Export the complete Comic Maker page at its native page resolution."""
     if not getattr(scene, "is_manga_mode", lambda: False)():
-        QMessageBox.warning(parent, "Export", "Comic Maker is not active.")
+        QMessageBox.warning(parent, "导出", "漫画制作器未启用。")
         return
 
     from manga_maker import PAGE_HEIGHT, PAGE_WIDTH
@@ -177,10 +210,7 @@ def export_manga_photo(parent, scene):
             Qt.TransformationMode.SmoothTransformation)
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    path, _ = QFileDialog.getSaveFileName(
-        parent, "Export Comic Page", f"comic-page-{timestamp}.png",
-        "PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp)",
-    )
+    path = _save_dialog(parent, "导出漫画页面", f"comic-page-{timestamp}")
     if path:
         _save_image(parent, image, path)
 
@@ -188,7 +218,7 @@ def export_manga_photo(parent, scene):
 def export_collage_photo(parent, scene):
     """Export the complete Photo Collage page at its configured aspect ratio."""
     if not getattr(scene, "is_collage_mode", lambda: False)():
-        QMessageBox.warning(parent, "Export", "Photo Collage is not active.")
+        QMessageBox.warning(parent, "导出", "照片拼贴未启用。")
         return
 
     source = scene.sceneRect()
@@ -226,10 +256,7 @@ def export_collage_photo(parent, scene):
             Qt.TransformationMode.SmoothTransformation)
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    path, _ = QFileDialog.getSaveFileName(
-        parent, "Export Photo Collage", f"photo-collage-{timestamp}.png",
-        "PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp)",
-    )
+    path = _save_dialog(parent, "导出照片拼贴", f"photo-collage-{timestamp}")
     if path:
         _save_image(parent, image, path)
 
@@ -248,7 +275,7 @@ def export_video(parent, scene, photo_item, player: VideoPlayer,
     # At least one player must be loaded
     active = player if (player and player.is_loaded()) else right_player
     if active is None or not active.is_loaded():
-        QMessageBox.warning(parent, "Export", "No video loaded.")
+        QMessageBox.warning(parent, "导出", "未加载视频。")
         return
 
     src_path = active.path
@@ -257,7 +284,7 @@ def export_video(parent, scene, photo_item, player: VideoPlayer,
     default_name = f"{base}-{timestamp}.mp4"
 
     out_path, _ = QFileDialog.getSaveFileName(
-        parent, "Export Video", default_name,
+        parent, "导出视频", default_name,
         "MP4 (*.mp4);;AVI (*.avi);;MKV (*.mkv)"
     )
     if not out_path:
@@ -272,7 +299,7 @@ def export_video(parent, scene, photo_item, player: VideoPlayer,
     elif driver and driver.is_loaded():
         _export_single_video(parent, scene, photo_item, driver, out_path)
     else:
-        QMessageBox.warning(parent, "Export", "No video player available.")
+        QMessageBox.warning(parent, "导出", "没有可用的视频播放器。")
         return
 
 
@@ -316,7 +343,7 @@ def _export_single_video(parent, scene, photo_item, player: VideoPlayer, out_pat
     import cv2
     frames = player.get_export_frames()
     if not frames:
-        QMessageBox.warning(parent, "Export", "No frames to export after trimming/cuts.")
+        QMessageBox.warning(parent, "导出", "No frames to export after trimming/cuts.")
         return
 
     # Use native video dimensions for full-resolution export.
@@ -333,8 +360,8 @@ def _export_single_video(parent, scene, photo_item, player: VideoPlayer, out_pat
     # Pre-render bubble overlay once — bubbles are static across all frames.
     bubble_overlay = _prerender_bubble_overlay(scene, photo_item, W, H)
 
-    progress = QProgressDialog("Exporting video…", "Cancel", 0, len(frames), parent)
-    progress.setWindowTitle("Exporting")
+    progress = QProgressDialog("正在导出视频…", "取消", 0, len(frames), parent)
+    progress.setWindowTitle("正在导出")
     progress.setWindowModality(Qt.WindowModality.ApplicationModal)
     progress.setMinimumDuration(0)
     progress.setValue(0)
@@ -370,7 +397,7 @@ def _export_single_video(parent, scene, photo_item, player: VideoPlayer, out_pat
     _finish_video_audio(player, tmp_video, out_path, frames)
     _safe_remove(tmp_video)
 
-    QMessageBox.information(parent, "Export", f"Video saved to:\n{out_path}")
+    QMessageBox.information(parent, "导出", f"视频已保存到：\n{out_path}")
 
 
 def _pixmap_to_bgr(pixmap, w: int, h: int):
@@ -404,12 +431,12 @@ def _export_dual_video(parent, scene, left_item, left_player: VideoPlayer,
     # Pick the driver: prefer left video, fall back to right video
     driver = left_player if left_has_video else right_player
     if driver is None or not driver.is_loaded():
-        QMessageBox.warning(parent, "Export", "No video found for dual export.")
+        QMessageBox.warning(parent, "导出", "未找到可用于双联导出的视频。")
         return
 
     frames = driver.get_export_frames()
     if not frames:
-        QMessageBox.warning(parent, "Export", "No frames to export.")
+        QMessageBox.warning(parent, "导出", "没有可导出的帧。")
         return
 
     # Use native video dimensions for full-resolution export.
@@ -454,8 +481,8 @@ def _export_dual_video(parent, scene, left_item, left_player: VideoPlayer,
     # Pre-render bubble overlay for the left panel once (bubbles are static).
     left_overlay = _prerender_bubble_overlay(scene, left_item, LW, LH)
 
-    progress = QProgressDialog("Exporting dual video…", "Cancel", 0, len(frames), parent)
-    progress.setWindowTitle("Exporting")
+    progress = QProgressDialog("正在导出双联视频…", "取消", 0, len(frames), parent)
+    progress.setWindowTitle("正在导出")
     progress.setWindowModality(Qt.WindowModality.ApplicationModal)
     progress.setMinimumDuration(0)
     progress.setValue(0)
@@ -511,7 +538,7 @@ def _export_dual_video(parent, scene, left_item, left_player: VideoPlayer,
     _finish_video_audio(driver, tmp_video, out_path, frames)
     _safe_remove(tmp_video)
 
-    QMessageBox.information(parent, "Export", f"Dual video saved to:\n{out_path}")
+    QMessageBox.information(parent, "导出", f"双格视频已保存到：\n{out_path}")
 
 
 # ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 top_bar.py — TopBar: application header bar (v4 redesign).
 
 Layout (left → right):
-  Logo icon · App name · Byline  ···  Open  Export  | Undo  Redo  | Zoom ▾  ···  Gear  | ⋮
+  Logo icon · App name · Byline  ···  打开  Export  | Undo  Redo  | Zoom ▾  ···  Gear  | ⋮
 """
 
 from PyQt6.QtWidgets import (
@@ -59,11 +59,11 @@ class TopBar(QWidget):
         logo_icon.setPixmap(logo_pix)
         lay.addWidget(logo_icon)
 
-        app_name = QLabel("Speech Bubble Editor")
+        app_name = QLabel(__app_name__)
         app_name.setObjectName("TopBarLogo")
         lay.addWidget(app_name)
 
-        byline = QLabel("by Long Weekend Labs")
+        byline = QLabel("由 Long Weekend Labs 出品")
         byline.setObjectName("TopBarByline")
         byline.setMinimumWidth(138)
         byline.setSizePolicy(
@@ -76,8 +76,8 @@ class TopBar(QWidget):
         # ── Open ──────────────────────────────────────────────────────
         self.btn_open = self._action_btn(
             icon=make_icon(ICON_OPEN, 20, FG),
-            label="Open…",
-            tooltip="Open photo or video  (Ctrl+O)",
+            label="打开…",
+            tooltip="打开照片或视频  (Ctrl+O)",
             shortcut="Ctrl+O",
         )
         self.btn_open.clicked.connect(self._on_open)
@@ -86,8 +86,8 @@ class TopBar(QWidget):
         # ── Export ────────────────────────────────────────────────────
         self.btn_export = self._action_btn(
             icon=make_icon(ICON_EXPORT, 20, "#ffffff"),
-            label="Export…",
-            tooltip="Export with bubbles  (Ctrl+E)",
+            label="导出…",
+            tooltip="导出气泡  (Ctrl+E)",
             shortcut="Ctrl+E",
             accent=True,
         )
@@ -101,8 +101,8 @@ class TopBar(QWidget):
         # ── Undo / Redo ───────────────────────────────────────────────
         self.btn_undo = self._action_btn(
             icon=make_icon(ICON_UNDO, 20, MUTED),
-            label="Undo",
-            tooltip="Undo  (Ctrl+Z)",
+            label="撤销",
+            tooltip="撤销  (Ctrl+Z)",
             shortcut="Ctrl+Z",
         )
         self.btn_undo.setEnabled(False)
@@ -111,7 +111,7 @@ class TopBar(QWidget):
 
         self.btn_redo = self._action_btn(
             icon=make_icon(ICON_REDO, 20, MUTED),
-            label="Redo",
+            label="重做",
             tooltip="Redo  (Ctrl+Y / Ctrl+Shift+Z)",
             shortcut="Ctrl+Y",
         )
@@ -121,8 +121,8 @@ class TopBar(QWidget):
 
         self.btn_reset = self._action_btn(
             icon=make_icon(ICON_RESET, 20, MUTED),
-            label="Reset",
-            tooltip="Start a fresh project  (Ctrl+N)",
+            label="重置",
+            tooltip="开始新项目  (Ctrl+N)",
             shortcut="Ctrl+N",
         )
         self.btn_reset.setEnabled(False)
@@ -139,7 +139,7 @@ class TopBar(QWidget):
         self.btn_zoom.setMinimumWidth(110)
         self.btn_zoom.setIcon(make_icon(ICON_ZOOM, 20, MUTED))
         self.btn_zoom.setIconSize(QSize(14, 14))
-        self.btn_zoom.setToolTip("Zoom level — click to change")
+        self.btn_zoom.setToolTip("缩放级别 — 点击更改")
         self.btn_zoom.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self._update_zoom_label()
         self.btn_zoom.clicked.connect(self._show_zoom_menu)
@@ -161,7 +161,7 @@ class TopBar(QWidget):
         # ── ⋮ More menu ───────────────────────────────────────────────
         self.btn_more = self._icon_btn(
             make_icon(ICON_MORE, 20, MUTED),
-            "More options — about, help, feedback",
+            "更多选项 — 关于、帮助、反馈",
         )
         self.btn_more.clicked.connect(self._show_more_menu)
         lay.addWidget(self.btn_more)
@@ -227,8 +227,8 @@ class TopBar(QWidget):
             ("75%",        75),
             ("50%",        50),
             None,
-            ("Fit Width",  "fit-width"),
-            ("Fit Window", "fit-window"),
+            ("适应宽度",  "fit-width"),
+            ("适应窗口", "fit-window"),
         ]
         for item in LEVELS:
             if item is None:
@@ -258,9 +258,9 @@ class TopBar(QWidget):
         if isinstance(z, int):
             label = f"  {z}%  "
         elif z == "fit-width":
-            label = "  Fit Width  "
+            label = "  适应宽度  "
         else:
-            label = "  Fit Window  "
+            label = "  适应窗口  "
         self.btn_zoom.setText(label)
 
     # ------------------------------------------------------------------
@@ -268,9 +268,9 @@ class TopBar(QWidget):
     # ------------------------------------------------------------------
 
     def _send_feedback(self):
-        """Open a new issue pre-filled with the build the report came from."""
+        """打开 a new issue pre-filled with the build the report came from."""
         title = QUrl.toPercentEncoding(
-            f"{__app_name__} {__version__} feedback"
+            f"{__app_name__} {__version__} 反馈"
         ).data().decode()
         QDesktopServices.openUrl(QUrl(f"{URL_ISSUES}/new?title={title}"))
 
@@ -281,18 +281,18 @@ class TopBar(QWidget):
             QDesktopServices.openUrl(QUrl(url))
 
         ITEMS = [
-            ("New project", self.reset_requested.emit, self.btn_reset.isEnabled()),
+            ("新建项目", self.reset_requested.emit, self.btn_reset.isEnabled()),
             None,
-            ("Keyboard Shortcuts",        self.shortcuts_requested.emit),
+            ("键盘快捷键",        self.shortcuts_requested.emit),
             None,
-            ("About Speech Bubble Editor",  self.about_requested.emit),
-            ("Release Notes",               lambda: _open(URL_RELEASES)),
-            ("Help & Documentation",        lambda: _open(URL_HOMEPAGE)),
+            ("关于对话气泡编辑器",  self.about_requested.emit),
+            ("更新说明",               lambda: _open(URL_RELEASES)),
+            ("帮助与文档",        lambda: _open(URL_HOMEPAGE)),
             None,
-            ("Send Feedback",               self._send_feedback),
-            ("View on GitHub",              lambda: _open(URL_REPO)),
+            ("发送反馈",               self._send_feedback),
+            ("在 GitHub 上查看",              lambda: _open(URL_REPO)),
             None,
-            ("Check for Updates",           lambda: _open(URL_RELEASES)),
+            ("检查更新",           lambda: _open(URL_RELEASES)),
         ]
         for item in ITEMS:
             if item is None:
@@ -321,7 +321,7 @@ class TopBar(QWidget):
 
     def _on_open(self):
         ext_list = " ".join(f"*{e}" for e in ALL_EXTENSIONS)
-        path = open_file(self, "Open Media", f"All supported media ({ext_list})")
+        path = open_file(self, "打开媒体", f"所有支持的媒体 ({ext_list})")
         if path:
             self.open_media_requested.emit(path)
 
@@ -348,8 +348,8 @@ class TopBar(QWidget):
             return
         self._compact = compact
         self._byline.setVisible(not compact)
-        self.btn_undo.setText("" if compact else "Undo")
-        self.btn_redo.setText("" if compact else "Redo")
+        self.btn_undo.setText("" if compact else "撤销")
+        self.btn_redo.setText("" if compact else "重做")
         self.btn_reset.setVisible(not compact)
         for btn in (self.btn_undo, self.btn_redo):
             btn.setFixedWidth(34 if compact else btn.sizeHint().width())

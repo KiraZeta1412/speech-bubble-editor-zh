@@ -225,8 +225,8 @@ class VideoControls(QWidget):
         btn_row.setSpacing(4)
 
         # L/R toggle (hidden until dual)
-        self._btn_left = self._tbtn("L", 26, "Edit left media", checkable=True, checked=True)
-        self._btn_right_side = self._tbtn("R", 26, "Edit right media", checkable=True)
+        self._btn_left = self._tbtn("L", 26, "编辑左侧媒体", checkable=True, checked=True)
+        self._btn_right_side = self._tbtn("R", 26, "编辑右侧媒体", checkable=True)
         self._side_sep = self._tbtn("|", 10, "")
         self._side_sep.setEnabled(False)
         for w in (self._btn_left, self._btn_right_side, self._side_sep):
@@ -246,11 +246,11 @@ class VideoControls(QWidget):
             b.setToolTip(tip)
             return b
 
-        self._btn_first  = transport_btn(ICON_TO_START,  "Go to first frame  (Home)")
-        self._btn_stepb  = transport_btn(ICON_STEP_BACK, "Step back one frame  (←)")
-        self._btn_play   = transport_btn(ICON_PLAY,      "Play  (Space)", size=34)
-        self._btn_stepf  = transport_btn(ICON_STEP_FWD,  "Step forward one frame  (→)")
-        self._btn_last   = transport_btn(ICON_TO_END,    "Go to last frame  (End)")
+        self._btn_first  = transport_btn(ICON_TO_START,  "跳到第一帧  (Home)")
+        self._btn_stepb  = transport_btn(ICON_STEP_BACK, "后退一帧  (←)")
+        self._btn_play   = transport_btn(ICON_PLAY,      "播放  (空格键)", size=34)
+        self._btn_stepf  = transport_btn(ICON_STEP_FWD,  "前进一帧  (→)")
+        self._btn_last   = transport_btn(ICON_TO_END,    "跳到最后一帧  (End)")
 
         self._icon_play  = make_icon(ICON_PLAY,  16, FG)
         self._icon_pause = make_icon(ICON_PAUSE, 16, ACCENT)
@@ -265,9 +265,9 @@ class VideoControls(QWidget):
                   self._btn_stepf, self._btn_last):
             btn_row.addWidget(b)
 
-        self._mute_check = QCheckBox("Mute")
+        self._mute_check = QCheckBox("静音")
         self._mute_check.setObjectName("MuteAudioCheck")
-        self._mute_check.setToolTip("Mute this video's audio during preview and export")
+        self._mute_check.setToolTip("在预览和导出时静音此视频的音频")
         self._mute_check.toggled.connect(self._on_audio_muted)
         btn_row.addWidget(self._mute_check)
 
@@ -288,11 +288,11 @@ class VideoControls(QWidget):
             b.setCheckable(checkable)
             return b
 
-        btn_in  = edit_btn(ICON_SET_IN,  "Set In",  "Set trim in-point to current frame  ([)")
-        btn_out = edit_btn(ICON_SET_OUT, "Set Out", "Set trim out-point to current frame  (])")
-        btn_cut = edit_btn(ICON_CUT,     "Cut",     "Cut selected trim range from clip")
-        btn_clr = edit_btn(ICON_MARKER,  "Clr",     "Clear all cuts")
-        self._btn_reverse = edit_btn(ICON_REVERSE, "Reverse",
+        btn_in  = edit_btn(ICON_SET_IN,  "设置入点",  "将入点设置到当前帧  ([)")
+        btn_out = edit_btn(ICON_SET_OUT, "设置出点", "将出点设置到当前帧  (])")
+        btn_cut = edit_btn(ICON_CUT,     "剪切",     "从片段中剪掉选中的剪辑范围")
+        btn_clr = edit_btn(ICON_MARKER,  "清除",     "清除所有剪切")
+        self._btn_reverse = edit_btn(ICON_REVERSE, "反向",
                                      "Toggle playback / export reversal",
                                      checkable=True)
 
@@ -318,13 +318,13 @@ class VideoControls(QWidget):
         self._speed_slider.setFixedWidth(120)
         self._speed_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self._speed_slider.setTickInterval(5)
-        self._speed_slider.setToolTip("Slow down video: magnetic stops at 10%, 25%, 35%, 50%, 75%, 100%")
+        self._speed_slider.setToolTip("放慢视频：磁性吸附点位于 10%、25%、35%、50%、75%、100%")
         self._speed_slider.valueChanged.connect(self._on_speed_slider)
         self._speed_slider.sliderReleased.connect(self._snap_speed_slider)
         btn_row.addWidget(self._speed_slider)
 
         # Fullscreen
-        fs_btn = transport_btn(ICON_FULLSCREEN, "Toggle fullscreen window  (F)")
+        fs_btn = transport_btn(ICON_FULLSCREEN, "切换全屏窗口  (F)")
         fs_btn.clicked.connect(self.fullscreen_requested)
         btn_row.addWidget(fs_btn)
 
@@ -457,7 +457,7 @@ class VideoControls(QWidget):
             return
         self._playing = not self._playing
         self._btn_play.setIcon(self._icon_pause if self._playing else self._icon_play)
-        self._btn_play.setToolTip("Pause  (Space)" if self._playing else "Play  (Space)")
+        self._btn_play.setToolTip("暂停  (空格键)" if self._playing else "播放  (空格键)")
         if self._playing:
             if (self._current_frame < active.trim_in
                     or self._current_frame > active.trim_out):
@@ -473,7 +473,7 @@ class VideoControls(QWidget):
         self._playing = False
         self._timer.stop()
         self._btn_play.setIcon(self._icon_play)
-        self._btn_play.setToolTip("Play  (Space)")
+        self._btn_play.setToolTip("播放  (空格键)")
 
     def _advance_frame(self):
         active = self._active_player

@@ -23,26 +23,26 @@ class MainToolbar(QToolBar):
     about_requested       = pyqtSignal()
 
     def __init__(self, parent=None):
-        super().__init__("Main Toolbar", parent)
+        super().__init__("主工具栏", parent)
         self.setMovable(False)
         self.setIconSize(QSize(20, 20))
         self._build_actions()
 
     def _build_actions(self):
         # Open (universal — photos and videos)
-        act = QAction("Open", self)
+        act = QAction("打开", self)
         act.setShortcut("Ctrl+O")
         ext_str = ", ".join(e.lstrip(".").upper() for e in ALL_EXTENSIONS[:8]) + "…"
-        act.setToolTip(f"Open photo or video ({ext_str})  (Ctrl+O)")
+        act.setToolTip(f"打开照片或视频 ({ext_str})  (Ctrl+O)")
         act.triggered.connect(self._on_open)
         self.addAction(act)
 
         self.addSeparator()
 
         # Export
-        self.act_export = QAction("Export", self)
+        self.act_export = QAction("导出", self)
         self.act_export.setShortcut("Ctrl+E")
-        self.act_export.setToolTip("Export with bubbles (Ctrl+E)")
+        self.act_export.setToolTip("导出（含气泡）(Ctrl+E)")
         self.act_export.setEnabled(False)
         self.act_export.triggered.connect(self.export_requested)
         self.addAction(self.act_export)
@@ -50,14 +50,14 @@ class MainToolbar(QToolBar):
         self.addSeparator()
 
         # Undo
-        self.act_undo = QAction("Undo", self)
+        self.act_undo = QAction("撤销", self)
         self.act_undo.setShortcut("Ctrl+Z")
         self.act_undo.setEnabled(False)
         self.act_undo.triggered.connect(self.undo_requested)
         self.addAction(self.act_undo)
 
         # Redo
-        self.act_redo = QAction("Redo", self)
+        self.act_redo = QAction("重做", self)
         self.act_redo.setShortcuts([QKeySequence("Ctrl+Y"),
                                     QKeySequence("Ctrl+Shift+Z")])
         self.act_redo.setEnabled(False)
@@ -67,10 +67,10 @@ class MainToolbar(QToolBar):
         self.addSeparator()
 
         # Add Bubble
-        self.act_add_bubble = QAction("＋ Bubble", self)
+        self.act_add_bubble = QAction("＋ 气泡", self)
         self.act_add_bubble.setShortcut("Ctrl+B")
         self.act_add_bubble.setToolTip(
-            "Add a speech bubble to the canvas (Ctrl+B)\n"
+            "添加 a speech bubble to the canvas (Ctrl+B)\n"
             "You can also double-click anywhere on the canvas"
         )
         self.act_add_bubble.setEnabled(False)
@@ -80,10 +80,10 @@ class MainToolbar(QToolBar):
         self.addSeparator()
 
         # Add Layer
-        self.act_add_layer = QAction("+ Layer", self)
+        self.act_add_layer = QAction("+ 图层", self)
         self.act_add_layer.setShortcut("Ctrl+L")
         self.act_add_layer.setToolTip(
-            "Add a photo or video as an overlay layer (Ctrl+L)\n"
+            "添加 a photo or video as an overlay layer (Ctrl+L)\n"
             "Layers can be freely positioned and resized on the canvas"
         )
         self.act_add_layer.setEnabled(False)
@@ -93,9 +93,9 @@ class MainToolbar(QToolBar):
         self.addSeparator()
 
         # Meme
-        self.act_meme = QAction("Meme", self)
+        self.act_meme = QAction("梗图", self)
         self.act_meme.setCheckable(True)
-        self.act_meme.setToolTip("Add black caption bars above and below (meme style)")
+        self.act_meme.setToolTip("在上下添加黑色字幕条（梗图风格）")
         self.act_meme.setEnabled(False)
         self.act_meme.toggled.connect(self.meme_toggled)
         self.addAction(self.act_meme)
@@ -103,7 +103,7 @@ class MainToolbar(QToolBar):
         self.addSeparator()
 
         # Dual
-        self.act_dual = QAction("Dual", self)
+        self.act_dual = QAction("双格", self)
         self.act_dual.setCheckable(True)
         self.act_dual.setToolTip("Side-by-side dual media mode (before / after)")
         self.act_dual.setEnabled(False)
@@ -116,8 +116,8 @@ class MainToolbar(QToolBar):
                              QSizePolicy.Policy.Preferred)
         self.addWidget(spacer)
 
-        act_about = QAction("About", self)
-        act_about.setToolTip("About Speech Bubble Editor")
+        act_about = QAction("关于", self)
+        act_about.setToolTip("关于对话气泡编辑器")
         act_about.triggered.connect(self.about_requested)
         self.addAction(act_about)
 
@@ -126,8 +126,8 @@ class MainToolbar(QToolBar):
     def _on_open(self):
         ext_list = " ".join(f"*{e}" for e in ALL_EXTENSIONS)
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open Media", "",
-            f"All supported media ({ext_list})"
+            self, "打开媒体", "",
+            f"所有支持的媒体 ({ext_list})"
         )
         if path:
             self.open_media_requested.emit(path)

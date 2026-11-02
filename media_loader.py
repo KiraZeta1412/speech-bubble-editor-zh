@@ -34,10 +34,10 @@ def decode_media(path):
     player = VideoPlayer()
     try:
         if not player.load(path):
-            raise ValueError('The video could not be opened.')
+            raise ValueError('无法打开该视频。')
         frame = player.get_frame_ndarray(0)
         if frame is None:
-            raise ValueError('The first video frame could not be decoded.')
+            raise ValueError('无法解码视频首帧。')
         return PreparedMedia(VideoPlayer._bgr_to_image(frame), player)
     except Exception:
         player.release()

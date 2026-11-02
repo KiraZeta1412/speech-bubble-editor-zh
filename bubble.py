@@ -67,15 +67,15 @@ _AL_LEFT = int(Qt.AlignmentFlag.AlignLeft)
 TEXT_PRESETS = [
     {"name": "Instagram",  "family": "Inter",      "bold": True,
      "color": (255, 255, 255), "frame": (0, 0, 0, 205), "bars": True, "align": _AL_LEFT},
-    {"name": "Clean",      "family": "Inter",      "bold": True,
+    {"name": "简洁",      "family": "Inter",      "bold": True,
      "color": (255, 255, 255), "frame": (0, 0, 0, 0),   "align": _AL},
-    {"name": "Headline",   "family": "Anton",      "bold": False,
+    {"name": "标题",   "family": "Anton",      "bold": False,
      "color": (255, 255, 255), "frame": (0, 0, 0, 0),   "align": _AL},
-    {"name": "Yellow Pop", "family": "Anton",      "bold": False,
+    {"name": "黄色醒目", "family": "Anton",      "bold": False,
      "color": (255, 214, 0),   "frame": (0, 0, 0, 0),   "halo": True, "align": _AL},
-    {"name": "Outline",    "family": "Inter",      "bold": True,
+    {"name": "描边",    "family": "Inter",      "bold": True,
      "color": (255, 255, 255), "frame": (0, 0, 0, 0),   "halo": True, "align": _AL},
-    {"name": "Caption Bar","family": "Inter",      "bold": True,
+    {"name": "旁白条","family": "Inter",      "bold": True,
      "color": (255, 255, 255), "frame": (0, 0, 0, 165), "align": _AL},
 ]
 
@@ -105,7 +105,7 @@ class TailHandle(QGraphicsEllipseItem):
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
         self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
-        self.setToolTip("Drag to repoint tail")
+        self.setToolTip("拖动以重新指向尾巴")
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -232,7 +232,7 @@ class ResizeHandle(QGraphicsRectItem):
 
         # Text object: every handle resizes the FRAME freely (corners + edges),
         # like a normal selection box. The text wraps to the width and is
-        # centred; use "Fit Text to Box" to scale the text into the frame.
+        # centred; use "文字适应框" to scale the text into the frame.
         if self._bubble.get_style() == "text":
             self._bubble._text_manual_h = True   # stop auto-hugging the height
             self._bubble.clear_fit()             # box changed → fit is stale
@@ -617,7 +617,7 @@ class BubbleItem(QGraphicsItem):
         self._fill_color   = QColor(255, 255, 255, 240)
         self._border_color = QColor(20, 20, 20)
         self._border_width = 2.0
-        self._tail_position = "Bottom Center"
+        self._tail_position = "底部居中"
         self._tail_width = 40
         self._tail_shape = "wedge"     # wedge | curved | line | dots | none
         self._tail_count = 1           # 0-3 tails (Balloon+-style)
@@ -638,7 +638,7 @@ class BubbleItem(QGraphicsItem):
         self._ink_path_cache = []
         self._accents: set[str] = set()   # any combination of ACCENTS
         self._accent_amount = 50          # strength / density, %
-        # Inset photo (Balloon+ "Photo" tab): an image clipped to the bubble.
+        # Inset photo (Balloon+ "照片" tab): an image clipped to the bubble.
         self._inset_pixmap = None      # QPixmap | None
         self._inset_spacing = 25       # % inset from the bubble edge
         self._inset_blur = 3           # edge feather steps (0 = hard edge)
@@ -703,13 +703,13 @@ class BubbleItem(QGraphicsItem):
         # Typography controls for the text style (Camtasia-like).
         self._letter_spacing: float = 0.0   # H. Spacing — extra px between glyphs
         self._line_spacing:   float = 0.0   # V. Spacing — extra px between lines
-        self._fit_mode:  bool = False       # "Fit Text to Box" active?
+        self._fit_mode:  bool = False       # "文字适应框" active?
         self._fit_display: list = []        # [(line_text, pt, justify)] from fit
         self._line_bars: bool = False       # Instagram-style per-line bg bars
         self._text_manual_h: bool = False   # user set an explicit box height
                                              # (top/bottom handle) → don't auto-hug
         self._text_item = QGraphicsTextItem(self)
-        self._text_item.setPlainText("Type here...")
+        self._text_item.setPlainText("在此输入...")
         self._text_item.setDefaultTextColor(QColor(15, 15, 15))
         self._text_item.setFont(_default_font)
         self._text_item.document().setDocumentMargin(0)
@@ -739,7 +739,7 @@ class BubbleItem(QGraphicsItem):
             self._sync_tail_handles()
         except Exception:
             import logging
-            logging.getLogger("sbe").exception("applying bubble defaults failed")
+            logging.getLogger("sbe").exception("应用气泡默认值失败")
 
         if style != DEFAULT_STYLE:
             self.set_style(style)
@@ -931,7 +931,7 @@ class BubbleItem(QGraphicsItem):
             n = self.lobe_count()
             if not any(t.strip() for t in self._lobe_texts):
                 current = self._text_item.toPlainText().strip()
-                if current in ("", "Type here..."):
+                if current in ("", "在此输入..."):
                     self._lobe_texts = ["" for _ in range(n)]
                 else:
                     parts = [p.strip() for p in current.split("\n") if p.strip()]
@@ -1152,7 +1152,7 @@ class BubbleItem(QGraphicsItem):
     def _text_display_lines(self, avail_w: float):
         """Return [(text, QFont, justify)] for each rendered line.
 
-        In fit mode the precomputed block layout is used (uniform size, justified
+        In fit mode the precomputed block布局 is used (uniform size, justified
         edges); otherwise each paragraph is word-wrapped at the base size."""
         if self._fit_mode and self._fit_display:
             return [(t, self._spaced_font(s), j) for t, s, j in self._fit_display]
@@ -1326,7 +1326,7 @@ class BubbleItem(QGraphicsItem):
     def _set_font_pt_silent(self, pt: int):
         """Set only the point size (no relayout / no notify). Used by the resize
         handles so text scales with the bubble; the following set_body_rect does
-        the single layout pass."""
+        the single布局 pass."""
         pt = int(pt)
         if pt <= 0:
             return
@@ -1368,7 +1368,7 @@ class BubbleItem(QGraphicsItem):
         wrap and grow to fill the height instead of leaving it empty. Explicit
         line breaks in the text are honoured."""
         from PyQt6.QtGui import QTextDocument, QTextOption
-        text = self._text_item.toPlainText() or "Type here..."
+        text = self._text_item.toPlainText() or "在此输入..."
         sw, sh = self._fit_bounds(r)
 
         doc = QTextDocument()
@@ -1433,7 +1433,7 @@ class BubbleItem(QGraphicsItem):
         self._notify_changed()
 
     # ------------------------------------------------------------------
-    # Inset photo (Balloon+ "Photo" tab)
+    # Inset photo (Balloon+ "照片" tab)
     # ------------------------------------------------------------------
 
     def has_inset_photo(self) -> bool:
@@ -1925,7 +1925,7 @@ class BubbleItem(QGraphicsItem):
     def _on_text_contents_changed(self):
         """Called whenever the text document changes (typing or paste).
 
-        Re-runs layout so the bubble grows or shrinks font in real time.
+        Re-runs布局 so the bubble grows or shrinks font in real time.
         """
         try:
             # Editing the content invalidates any per-line "fit" sizes.
@@ -1935,7 +1935,7 @@ class BubbleItem(QGraphicsItem):
             self.update()
         except Exception:
             import logging
-            logging.getLogger("sbe").exception("bubble text layout failed")
+            logging.getLogger("sbe").exception("气泡文字排版失败")
 
     def _update_handle_positions(self):
         r  = self._body_rect
@@ -1954,16 +1954,16 @@ class BubbleItem(QGraphicsItem):
         # bubble sized for a 4 K photo.
         offset = max(28.0, min(r.width(), r.height()) * 0.55)
         positions = {
-            "Top Left": QPointF(r.left() + r.width() * 0.25, r.top() - offset),
-            "Top Center": QPointF(r.center().x(), r.top() - offset),
-            "Top Right": QPointF(r.right() - r.width() * 0.25, r.top() - offset),
-            "Right": QPointF(r.right() + offset, r.center().y()),
-            "Bottom Right": QPointF(r.right() - r.width() * 0.25, r.bottom() + offset),
-            "Bottom Center": QPointF(r.center().x(), r.bottom() + offset),
-            "Bottom Left": QPointF(r.left() + r.width() * 0.25, r.bottom() + offset),
-            "Left": QPointF(r.left() - offset, r.center().y()),
+            "左上": QPointF(r.left() + r.width() * 0.25, r.top() - offset),
+            "顶部居中": QPointF(r.center().x(), r.top() - offset),
+            "右上": QPointF(r.right() - r.width() * 0.25, r.top() - offset),
+            "右": QPointF(r.right() + offset, r.center().y()),
+            "右下": QPointF(r.right() - r.width() * 0.25, r.bottom() + offset),
+            "底部居中": QPointF(r.center().x(), r.bottom() + offset),
+            "左下": QPointF(r.left() + r.width() * 0.25, r.bottom() + offset),
+            "左": QPointF(r.left() - offset, r.center().y()),
         }
-        return positions.get(position, positions["Bottom Center"])
+        return positions.get(position, positions["底部居中"])
 
     # ------------------------------------------------------------------
     # QGraphicsItem overrides
@@ -2329,7 +2329,7 @@ class BubbleItem(QGraphicsItem):
         self._notify_changed()
 
     def _begin_lobe_edit(self, index: int):
-        """Open the inline editor over one lobe of a lobed balloon."""
+        """打开 the inline editor over one lobe of a lobed balloon."""
         import shapes
         rects = shapes.lobe_rects(self._style, self._body_rect)
         if not 0 <= index < len(rects):
@@ -2393,7 +2393,7 @@ class BubbleItem(QGraphicsItem):
             flags = (int(Qt.TextFlag.TextWordWrap)
                      | int(Qt.AlignmentFlag.AlignCenter))
             for idx, box in enumerate(rects):
-                txt = self.get_lobe_text(idx).strip() or "Type here..."
+                txt = self.get_lobe_text(idx).strip() or "在此输入..."
                 bounds = fm.boundingRect(QRectF(0, 0, box.width(), 10000),
                                          flags, txt)
                 if bounds.height() > box.height() or bounds.width() > box.width():
@@ -2429,7 +2429,7 @@ class BubbleItem(QGraphicsItem):
                                            colour.blue(), 110)))
                 painter.drawText(box, int(Qt.TextFlag.TextWordWrap)
                                  | int(Qt.AlignmentFlag.AlignCenter),
-                                 "Type here...")
+                                 "在此输入...")
                 painter.setFont(font)
                 continue
             if self._text_outline_width > 0:
@@ -2921,7 +2921,7 @@ class BubbleItem(QGraphicsItem):
             # Select-all only for the placeholder so the first keystroke replaces
             # it. For real text, place the caret at the end instead — selecting
             # the whole document meant one Backspace wiped everything.
-            if self.get_text().strip() in ("", "Type here..."):
+            if self.get_text().strip() in ("", "在此输入..."):
                 cursor.select(cursor.SelectionType.Document)
             else:
                 cursor.movePosition(cursor.MoveOperation.End)
@@ -3047,47 +3047,47 @@ class BubbleItem(QGraphicsItem):
     def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent):
         menu = QMenu()
         clipboard = QApplication.clipboard()
-        act_copy_text = menu.addAction("Copy Text")
-        act_paste_text = menu.addAction("Paste Text")
+        act_copy_text = menu.addAction("复制文字")
+        act_paste_text = menu.addAction("粘贴文字")
         act_paste_text.setEnabled(bool(clipboard.text()))
         menu.addSeparator()
-        act_del   = menu.addAction("Delete")
-        act_dup   = menu.addAction("Duplicate")
+        act_del   = menu.addAction("删除")
+        act_dup   = menu.addAction("创建副本")
         menu.addSeparator()
-        menu.addSection("Change Style")
-        act_oval    = menu.addAction("Oval  — speech bubble")
-        act_cloud   = menu.addAction("Cloud — thought bubble")
-        act_rect    = menu.addAction("Rectangle — caption bar")
+        menu.addSection("更换样式")
+        act_oval    = menu.addAction("椭圆  — 对话气泡")
+        act_cloud   = menu.addAction("云朵 — 思考气泡")
+        act_rect    = menu.addAction("矩形 — 旁白条")
         act_spiky   = menu.addAction("Spiky — shout / explosion")
-        act_scallop = menu.addAction("Scallop — soft flower bubble")
-        act_burst   = menu.addAction("Burst — electric zap")
-        act_wobbly  = menu.addAction("Wobbly — hand-drawn box")
-        act_text    = menu.addAction("Text only — no bubble")
-        act_scrim   = menu.addAction("Scrim — dark text strip")
-        act_caption = menu.addAction("Caption — stroke text overlay")
+        act_scallop = menu.addAction("花边 — 柔花气泡")
+        act_burst   = menu.addAction("放射形 — 闪电效果")
+        act_wobbly  = menu.addAction("歪扭 — 手绘方框")
+        act_text    = menu.addAction("仅文字 — 无气泡")
+        act_scrim   = menu.addAction("遮罩 — 深色文字条")
+        act_caption = menu.addAction("旁白框 — 描边文字叠加")
         # Premade text looks — applying one switches the bubble to text style.
         menu.addSeparator()
-        preset_menu = menu.addMenu("Text Style")
+        preset_menu = menu.addMenu("文字样式")
         preset_acts = {}
         for preset in TEXT_PRESETS:
             act = preset_menu.addAction(preset["name"])
             preset_acts[act] = preset
         act_fit = None
         if self._style == "text":
-            act_fit = menu.addAction("Fit Text to Box")
+            act_fit = menu.addAction("文字适应框")
 
         menu.addSeparator()
-        act_front = menu.addAction("Bring to Front")
-        act_back  = menu.addAction("Send to Back")
+        act_front = menu.addAction("置于顶层")
+        act_back  = menu.addAction("置于底层")
 
         # Snap options per style
         act_snap_top = act_snap_bot = act_snap_full = None
         if self._style in ("rect", "scrim"):
             menu.addSeparator()
-            act_snap_top  = menu.addAction("Snap to Top Edge")
-            act_snap_bot  = menu.addAction("Snap to Bottom Edge")
+            act_snap_top  = menu.addAction("吸附到顶部边缘")
+            act_snap_bot  = menu.addAction("吸附到底部边缘")
         if self._style == "scrim":
-            act_snap_full = menu.addAction("Snap to Full Width")
+            act_snap_full = menu.addAction("吸附到全宽")
 
         # Mark current style
         for act, s in [(act_oval,"oval"),(act_cloud,"cloud"),

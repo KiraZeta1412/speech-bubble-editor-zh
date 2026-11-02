@@ -1,5 +1,5 @@
 """
-main_window.py — MainWindow: v4 layout with TopBar, ContextToolbar,
+main_window.py — MainWindow: v4布局 with TopBar, ContextToolbar,
                  ToolSidebar, CanvasArea, InspectorDock, and StatusBar.
 """
 
@@ -97,7 +97,7 @@ class MainWindow(QMainWindow):
         vbox.addWidget(self.ctx_toolbar)
         vbox.addWidget(content, stretch=1)
 
-        self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage("就绪")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -248,19 +248,19 @@ class MainWindow(QMainWindow):
         self.controller.open_media_async(path)
 
     def _on_import_failed(self, path, target, detail):
-        self.statusBar().showMessage("Could not open media")
-        message = f"Cannot open:\n{path}"
+        self.statusBar().showMessage("无法打开媒体")
+        message = f"无法打开：\n{path}"
         if detail:
             message += f"\n\n{detail}"
-        title = {'right': 'Open Right Media', 'overlay': 'Add Layer'}.get(target, 'Open')
+        title = {'right': '打开右侧媒体', 'overlay': '添加图层'}.get(target, '打开')
         QMessageBox.warning(self, title, message)
 
     def _on_import_busy_changed(self, busy):
         # Reset can cancel an import even when the starting canvas is empty.
         self.top_bar.set_reset_enabled(busy or self.scene.has_photo())
-        if not busy and self.statusBar().currentMessage().startswith('Opening '):
+        if not busy and self.statusBar().currentMessage().startswith('正在打开 '):
             self.statusBar().showMessage(
-                os.path.basename(self.controller.model.media_path) or 'Ready')
+                os.path.basename(self.controller.model.media_path) or '就绪')
 
     def closeEvent(self, event):
         self.video_controls.stop()
@@ -301,8 +301,8 @@ class MainWindow(QMainWindow):
         ext_list = " ".join(f"*{e}" for e in ALL_EXTENSIONS)
         path = open_file(
             self,
-            "Open Right Media",
-            f"All supported media ({ext_list})",
+            "打开右侧媒体",
+            f"所有支持的媒体 ({ext_list})",
         )
         if path:
             self._on_right_media_dropped(path)
@@ -323,13 +323,13 @@ class MainWindow(QMainWindow):
         if not self.scene.has_photo():
             return
         ext_list = " ".join(f"*{e}" for e in ALL_EXTENSIONS)
-        path = open_file(self, "Add Layer", f"All supported media ({ext_list})")
+        path = open_file(self, "添加图层", f"所有支持的媒体 ({ext_list})")
         if not path:
             return
         self.controller.open_media_async(path, 'overlay')
 
     def _on_overlay_loaded(self, item):
-        self.statusBar().showMessage("Layer added")
+        self.statusBar().showMessage("已添加图层")
         if hasattr(item, "has_video") and item.has_video():
             self.video_controls.set_player(item.video_player())
             self.video_controls.set_right_player(None)
@@ -350,7 +350,7 @@ class MainWindow(QMainWindow):
             return
         if self.scene.has_video():
             QMessageBox.information(
-                self, "Crop", "Crop is available for photos only.")
+                self, "裁剪", "裁剪仅适用于照片。")
             return
         from crop_dialog import CropDialog
         from undo_commands import CropPhotoCommand, RotatePhotoCommand
@@ -364,7 +364,7 @@ class MainWindow(QMainWindow):
         stack = self.controller.undo_stack
         changed = False
         if turns:
-            stack.beginMacro("Rotate and Crop")
+            stack.beginMacro("旋转与裁剪")
             stack.push(RotatePhotoCommand(self.scene, turns))
             changed = True
         rotated = self.scene.photo_pixmap
@@ -383,7 +383,7 @@ class MainWindow(QMainWindow):
             return
         if self.scene.has_video():
             QMessageBox.information(
-                self, "Rotate", "Rotate is available for photos only.")
+                self, "旋转", "旋转仅适用于照片。")
             return
         from undo_commands import RotatePhotoCommand
         self.controller.undo_stack.push(RotatePhotoCommand(self.scene, 1))
@@ -522,7 +522,7 @@ class MainWindow(QMainWindow):
             self.ctx_toolbar.set_manga_mode(True)
             self.props.show_manga_settings()
             self.statusBar().showMessage(
-                "Comic Maker — double-click or drop images into empty panels")
+                "漫画创作 — 双击或拖放图片到空分格")
         else:
             self.controller.set_manga_mode(False)
             self.ctx_toolbar.set_manga_mode(False)
@@ -552,7 +552,7 @@ class MainWindow(QMainWindow):
             self.ctx_toolbar.set_collage_mode(True)
             self.props.show_manga_settings()
             self.statusBar().showMessage(
-                "Photo Collage — double-click or drop images into frames")
+                "照片拼贴 — 双击或拖放图片到画框")
         else:
             self.controller.set_collage_mode(False)
             self.ctx_toolbar.set_collage_mode(False)
@@ -580,18 +580,18 @@ class MainWindow(QMainWindow):
 
     def _on_open_manga_panel(self, index: int):
         ext_list = " ".join(f"*{e}" for e in IMAGE_EXTENSIONS)
-        label = "Collage Frame" if self.scene.is_collage_mode() else "Comic Panel"
-        path = open_file(self, f"Open {label} Image",
-                         f"Images ({ext_list})")
+        label = "拼贴画框" if self.scene.is_collage_mode() else "漫画分格"
+        path = open_file(self, f"打开 {label} 图片",
+                         f"图片 ({ext_list})")
         if path:
             self._on_manga_media_dropped(path, index)
 
     def _on_manga_media_dropped(self, path: str, index: int):
         if not self.scene.load_manga_panel(index, path):
-            title = "Photo Collage" if self.scene.is_collage_mode() else "Comic Maker"
-            QMessageBox.warning(self, title, f"Cannot open:\n{path}")
+            title = "照片拼贴" if self.scene.is_collage_mode() else "漫画创作"
+            QMessageBox.warning(self, title, f"无法打开：\n{path}")
         else:
-            unit = "Frame" if self.scene.is_collage_mode() else "Panel"
+            unit = "画框" if self.scene.is_collage_mode() else "分格"
             self.statusBar().showMessage(
                 f"{unit} {index + 1}: {os.path.basename(path)}")
 
@@ -686,7 +686,7 @@ class MainWindow(QMainWindow):
 
     def _show_open_dialog(self):
         ext_list = " ".join(f"*{e}" for e in ALL_EXTENSIONS)
-        path = open_file(self, "Open Media", f"All supported media ({ext_list})")
+        path = open_file(self, "打开媒体", f"所有支持的媒体 ({ext_list})")
         if path:
             self._on_open_media(path)
 
@@ -707,7 +707,7 @@ class MainWindow(QMainWindow):
         self.ctx_toolbar.set_manga_mode(False)
         self.view.resetTransform()
         self.view.viewport().update()
-        self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage("就绪")
 
     def _on_add_bubble_clicked(self):
         if not self.scene.has_photo():
@@ -871,7 +871,7 @@ class MainWindow(QMainWindow):
         self._apply_stack_order(ordered)
         item.setSelected(True)
         self._refresh_layers_panel()
-        self.statusBar().showMessage("Layer order changed")
+        self.statusBar().showMessage("图层顺序已更改")
 
     def _stack_items_bottom_to_top(self):
         items = [

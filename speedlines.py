@@ -44,7 +44,7 @@ class FocusHandle(QGraphicsEllipseItem):
         self.setPen(QPen(QColor("#121212"), 2.0))
         self.setZValue(10)
         self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
-        self.setToolTip("Drag to move the focus point")
+        self.setToolTip("拖动以移动焦点")
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -275,7 +275,7 @@ class SpeedLinesItem(QGraphicsItem):
 
     def contextMenuEvent(self, event):
         menu = QMenu()
-        act_del = menu.addAction("Delete Speed Lines")
+        act_del = menu.addAction("删除速度线")
         chosen = menu.exec(event.screenPos())
         if chosen == act_del:
             scene = self.scene()

@@ -60,24 +60,24 @@ def _sep() -> QFrame:
 
 
 STYLE_LABELS = {
-    "oval":    "Oval",
-    "cloud":   "Cloud",
-    "rect":    "Rect",
-    "spiky":   "Spiky",
-    "round":   "Round",
-    "blob":    "Blob",
-    "softbox": "Soft box",
-    "wobble":  "Shaky",
-    "hex":     "Angular",
-    "banner":  "Banner",
-    "twin":    "Twin",
-    "triple":  "Triple",
-    "scallop": "Scallop",
-    "burst":   "Burst",
-    "wobbly":  "Wobbly",
-    "text":    "Text",
-    "scrim":   "Scrim",
-    "caption": "Caption",
+    "oval":    "椭圆",
+    "cloud":   "云朵",
+    "rect":    "矩形",
+    "spiky":   "尖刺形",
+    "round":   "圆形",
+    "blob":    "圆润形",
+    "softbox": "柔角框",
+    "wobble":  "手绘",
+    "hex":     "棱角形",
+    "banner":  "横幅",
+    "twin":    "双尾",
+    "triple":  "三尾",
+    "scallop": "花边",
+    "burst":   "放射形",
+    "wobbly":  "抖动",
+    "text":    "文字",
+    "scrim":   "遮罩",
+    "caption": "旁白框",
 }
 
 
@@ -112,7 +112,7 @@ class PropertiesPanel(QWidget):
         self._font_combo = QFontComboBox()
         self._font_combo.setFixedWidth(150)
         self._font_combo.setFixedHeight(28)
-        self._font_combo.setToolTip("Font family")
+        self._font_combo.setToolTip("字体族")
         self._font_combo.currentFontChanged.connect(self._on_font_family)
         layout = self._font_row_layout
         idx = layout.indexOf(self._font_combo_placeholder)
@@ -161,7 +161,7 @@ class PropertiesPanel(QWidget):
         style_col = QVBoxLayout(style_box)
         style_col.setContentsMargins(0, 0, 0, 0)
         style_col.setSpacing(2)
-        style_col.addWidget(QLabel("Style"))
+        style_col.addWidget(QLabel("样式"))
 
         btn_row = QHBoxLayout()
         btn_row.setSpacing(3)
@@ -172,7 +172,7 @@ class PropertiesPanel(QWidget):
             btn.setText(label)
             btn.setCheckable(True)
             btn.setFixedHeight(28)
-            btn.setToolTip(f"Change to {label} style")
+            btn.setToolTip(f"切换到 {label} style")
             btn.setStyleSheet(
                 "QToolButton { border: 1px solid #888; border-radius: 4px; padding: 2px 6px; }"
                 "QToolButton:checked { background: #3a7bd5; color: white; border: 1px solid #2a5fa0; }"
@@ -192,7 +192,7 @@ class PropertiesPanel(QWidget):
         font_col = QVBoxLayout(font_box)
         font_col.setContentsMargins(0, 0, 0, 0)
         font_col.setSpacing(2)
-        font_col.addWidget(QLabel("Font"))
+        font_col.addWidget(QLabel("字体"))
 
         font_row = QHBoxLayout()
         font_row.setSpacing(4)
@@ -211,7 +211,7 @@ class PropertiesPanel(QWidget):
         self._font_size.setFixedWidth(55)
         self._font_size.setFixedHeight(28)
         self._font_size.setSuffix(" pt")
-        self._font_size.setToolTip("Font size")
+        self._font_size.setToolTip("字号")
         self._font_size.valueChanged.connect(self._on_font_size)
         font_row.addWidget(self._font_size)
 
@@ -219,7 +219,7 @@ class PropertiesPanel(QWidget):
         self._btn_bold.setText("B")
         self._btn_bold.setCheckable(True)
         self._btn_bold.setFixedSize(28, 28)
-        self._btn_bold.setToolTip("Bold")
+        self._btn_bold.setToolTip("粗体")
         self._btn_bold.setStyleSheet(
             "QToolButton { font-weight: bold; border: 1px solid #888; border-radius: 4px; }"
             "QToolButton:checked { background: #3a7bd5; color: white; }"
@@ -231,7 +231,7 @@ class PropertiesPanel(QWidget):
         self._btn_italic.setText("I")
         self._btn_italic.setCheckable(True)
         self._btn_italic.setFixedSize(28, 28)
-        self._btn_italic.setToolTip("Italic")
+        self._btn_italic.setToolTip("斜体")
         self._btn_italic.setStyleSheet(
             "QToolButton { font-style: italic; border: 1px solid #888; border-radius: 4px; }"
             "QToolButton:checked { background: #3a7bd5; color: white; }"
@@ -239,7 +239,7 @@ class PropertiesPanel(QWidget):
         self._btn_italic.clicked.connect(self._on_italic)
         font_row.addWidget(self._btn_italic)
 
-        self._btn_text_color = _color_btn(QColor(15, 15, 15), "Text colour")
+        self._btn_text_color = _color_btn(QColor(15, 15, 15), "文字颜色")
         self._btn_text_color.clicked.connect(self._on_text_color)
         font_row.addWidget(self._btn_text_color)
 
@@ -252,24 +252,24 @@ class PropertiesPanel(QWidget):
         bub_col = QVBoxLayout(bub_box)
         bub_col.setContentsMargins(0, 0, 0, 0)
         bub_col.setSpacing(2)
-        bub_col.addWidget(QLabel("Bubble"))
+        bub_col.addWidget(QLabel("气泡"))
 
         bub_row = QHBoxLayout()
         bub_row.setSpacing(6)
 
         # Fill colour
-        bub_row.addWidget(QLabel("Fill:"))
-        self._btn_fill = _color_btn(QColor(255, 255, 255), "Fill colour")
+        bub_row.addWidget(QLabel("填充："))
+        self._btn_fill = _color_btn(QColor(255, 255, 255), "填充颜色")
         self._btn_fill.clicked.connect(self._on_fill_color)
         bub_row.addWidget(self._btn_fill)
 
         # Opacity slider
-        bub_row.addWidget(QLabel("Opacity:"))
+        bub_row.addWidget(QLabel("不透明度："))
         self._opacity_slider = QSlider(Qt.Orientation.Horizontal)
         self._opacity_slider.setRange(0, 100)
         self._opacity_slider.setValue(94)
         self._opacity_slider.setFixedWidth(80)
-        self._opacity_slider.setToolTip("Fill opacity")
+        self._opacity_slider.setToolTip("填充不透明度")
         self._opacity_slider.valueChanged.connect(self._on_opacity)
         bub_row.addWidget(self._opacity_slider)
         self._opacity_label = QLabel("94%")
@@ -277,8 +277,8 @@ class PropertiesPanel(QWidget):
         bub_row.addWidget(self._opacity_label)
 
         # Border colour
-        bub_row.addWidget(QLabel("Border:"))
-        self._btn_border_color = _color_btn(QColor(20, 20, 20), "Border colour")
+        bub_row.addWidget(QLabel("边框："))
+        self._btn_border_color = _color_btn(QColor(20, 20, 20), "边框颜色")
         self._btn_border_color.clicked.connect(self._on_border_color)
         bub_row.addWidget(self._btn_border_color)
 
@@ -290,7 +290,7 @@ class PropertiesPanel(QWidget):
         self._border_width.setFixedWidth(58)
         self._border_width.setFixedHeight(28)
         self._border_width.setSuffix(" px")
-        self._border_width.setToolTip("Border thickness")
+        self._border_width.setToolTip("边框粗细")
         self._border_width.valueChanged.connect(self._on_border_width)
         bub_row.addWidget(self._border_width)
 
@@ -306,9 +306,9 @@ class PropertiesPanel(QWidget):
         media_row.setContentsMargins(12, 2, 12, 2)
         media_row.setSpacing(16)
 
-        media_row.addWidget(QLabel("Media:"))
+        media_row.addWidget(QLabel("媒体："))
 
-        self._chk_lock_ratio = QCheckBox("Lock Aspect Ratio")
+        self._chk_lock_ratio = QCheckBox("锁定宽高比")
         self._chk_lock_ratio.setToolTip(
             "Keep width/height proportional while resizing\n"
             "Checking this will also restore the original proportions.\n"
@@ -316,8 +316,8 @@ class PropertiesPanel(QWidget):
         self._chk_lock_ratio.toggled.connect(self._on_lock_ratio)
         media_row.addWidget(self._chk_lock_ratio)
 
-        self._btn_reset_size = QPushButton("Reset to Original Size")
-        self._btn_reset_size.setToolTip("Restore the media to its native pixel dimensions")
+        self._btn_reset_size = QPushButton("恢复原始大小")
+        self._btn_reset_size.setToolTip("将媒体恢复到原始像素尺寸")
         self._btn_reset_size.setFixedHeight(28)
         self._btn_reset_size.clicked.connect(self._on_reset_media_size)
         media_row.addWidget(self._btn_reset_size)
@@ -331,7 +331,7 @@ class PropertiesPanel(QWidget):
         dual_outer.setContentsMargins(12, 4, 12, 4)
         dual_outer.setSpacing(4)
 
-        dual_title = QLabel("Dual Mode Settings")
+        dual_title = QLabel("双联模式设置")
         dual_title.setStyleSheet("font-weight: bold; font-size: 12px;")
         dual_outer.addWidget(dual_title)
 
@@ -339,12 +339,12 @@ class PropertiesPanel(QWidget):
         dual_controls.setSpacing(12)
 
         # Gap
-        dual_controls.addWidget(QLabel("Gap:"))
+        dual_controls.addWidget(QLabel("间距："))
         self._dual_gap_slider = QSlider(Qt.Orientation.Horizontal)
         self._dual_gap_slider.setRange(0, 60)
         self._dual_gap_slider.setValue(4)
         self._dual_gap_slider.setFixedWidth(100)
-        self._dual_gap_slider.setToolTip("Gap width between the two panels")
+        self._dual_gap_slider.setToolTip("两个分格之间的间距宽度")
         self._dual_gap_slider.valueChanged.connect(self._on_dual_gap)
         dual_controls.addWidget(self._dual_gap_slider)
         self._dual_gap_label = QLabel("4 px")
@@ -354,18 +354,18 @@ class PropertiesPanel(QWidget):
         dual_controls.addWidget(_sep())
 
         # Divider border
-        dual_controls.addWidget(QLabel("Divider:"))
+        dual_controls.addWidget(QLabel("分隔线："))
         self._chk_dual_border = QCheckBox()
-        self._chk_dual_border.setToolTip("Show a border line at the seam")
+        self._chk_dual_border.setToolTip("在接缝处显示边框线")
         self._chk_dual_border.setChecked(False)
         self._chk_dual_border.toggled.connect(self._on_dual_border_toggle)
         dual_controls.addWidget(self._chk_dual_border)
 
-        self._btn_dual_border_color = _color_btn(QColor(90, 90, 90), "Divider line colour")
+        self._btn_dual_border_color = _color_btn(QColor(90, 90, 90), "分隔线颜色")
         self._btn_dual_border_color.clicked.connect(self._on_dual_border_color)
         dual_controls.addWidget(self._btn_dual_border_color)
 
-        dual_controls.addWidget(QLabel("Width:"))
+        dual_controls.addWidget(QLabel("宽度："))
         self._dual_border_width = QDoubleSpinBox()
         self._dual_border_width.setRange(0.0, 8.0)
         self._dual_border_width.setSingleStep(0.5)
@@ -373,19 +373,19 @@ class PropertiesPanel(QWidget):
         self._dual_border_width.setFixedWidth(58)
         self._dual_border_width.setFixedHeight(28)
         self._dual_border_width.setSuffix(" px")
-        self._dual_border_width.setToolTip("Divider line thickness")
+        self._dual_border_width.setToolTip("分隔线粗细")
         self._dual_border_width.valueChanged.connect(self._on_dual_border_width)
         dual_controls.addWidget(self._dual_border_width)
 
         dual_controls.addWidget(_sep())
 
         # Feather
-        dual_controls.addWidget(QLabel("Feather:"))
+        dual_controls.addWidget(QLabel("羽化："))
         self._dual_feather_slider = QSlider(Qt.Orientation.Horizontal)
         self._dual_feather_slider.setRange(0, 40)
         self._dual_feather_slider.setValue(0)
         self._dual_feather_slider.setFixedWidth(80)
-        self._dual_feather_slider.setToolTip("Feather (shadow gradient) at the seam edges")
+        self._dual_feather_slider.setToolTip("接缝边缘的羽化（阴影渐变）")
         self._dual_feather_slider.valueChanged.connect(self._on_dual_feather)
         dual_controls.addWidget(self._dual_feather_slider)
         self._dual_feather_label = QLabel("0 px")
@@ -503,7 +503,7 @@ class PropertiesPanel(QWidget):
         if not self._bubble or not self._undo_stack:
             return
         color = QColorDialog.getColor(
-            self._bubble.get_text_color(), self, "Text Colour")
+            self._bubble.get_text_color(), self, "文字颜色")
         if color.isValid():
             old = self._bubble.get_text_color()
             self._undo_stack.push(TextColorChangeCommand(self._bubble, old, color))
@@ -514,7 +514,7 @@ class PropertiesPanel(QWidget):
             return
         current = self._bubble.get_fill_color()
         color = QColorDialog.getColor(
-            current, self, "Fill Colour",
+            current, self, "填充颜色",
             QColorDialog.ColorDialogOption.ShowAlphaChannel)
         if color.isValid():
             self._undo_stack.push(FillColorChangeCommand(self._bubble, current, color))
@@ -538,7 +538,7 @@ class PropertiesPanel(QWidget):
         if not self._bubble or not self._undo_stack:
             return
         old = self._bubble.get_border_color()
-        color = QColorDialog.getColor(old, self, "Border Colour")
+        color = QColorDialog.getColor(old, self, "边框颜色")
         if color.isValid():
             self._undo_stack.push(BorderColorChangeCommand(self._bubble, old, color))
             _set_btn_color(self._btn_border_color, color)
@@ -590,7 +590,7 @@ class PropertiesPanel(QWidget):
 
     def _on_dual_border_color(self):
         color = QColorDialog.getColor(
-            self._dual_border_color_val, self, "Divider Colour")
+            self._dual_border_color_val, self, "分隔线颜色")
         if color.isValid():
             self._dual_border_color_val = color
             _set_btn_color(self._btn_dual_border_color, color)

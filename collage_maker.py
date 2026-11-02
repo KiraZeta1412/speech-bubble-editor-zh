@@ -1,4 +1,4 @@
-"""Clean, reusable photo-collage page layouts."""
+"""Clean, reusable photo-collage page布局s."""
 
 from __future__ import annotations
 
@@ -10,13 +10,13 @@ from PyQt6.QtCore import QRectF
 
 COLLAGE_COUNTS = tuple(range(2, 10))
 ASPECT_RATIOS = {
-    "Square · 1:1": 1.0,
-    "Portrait · 4:5": 4 / 5,
-    "Story · 9:16": 9 / 16,
-    "Landscape · 16:9": 16 / 9,
-    "Photo · 3:2": 3 / 2,
+    "方形 · 1:1": 1.0,
+    "竖版 · 4:5": 4 / 5,
+    "故事 · 9:16": 9 / 16,
+    "横版 · 16:9": 16 / 9,
+    "照片 · 3:2": 3 / 2,
 }
-LAYOUT_TYPES = ("Auto", "Grid", "Mosaic", "Hero", "Filmstrip")
+LAYOUT_TYPES = ("自动", "网格", "马赛克", "主图", "胶片条")
 PAGE_BASE = 1600.0
 
 
@@ -109,28 +109,28 @@ def _filmstrip_layout(count: int, bounds: QRectF, gap: float) -> list[QRectF]:
     return rects
 
 
-def generate_collage_layout(count: int, layout_type: str = "Auto",
+def generate_collage_layout(count: int, layout_type: str = "自动",
                             options: dict | None = None,
                             rng: random.Random | None = None):
     options = options or {}
     rng = rng or random.SystemRandom()
     count = max(min(int(count), max(COLLAGE_COUNTS)), min(COLLAGE_COUNTS))
-    aspect_name = str(options.get("aspect_ratio", "Square · 1:1"))
+    aspect_name = str(options.get("aspect_ratio", "方形 · 1:1"))
     width, height = page_size(aspect_name)
     margin = max(0.0, float(options.get("margin", 28)))
     gap = max(0.0, float(options.get("gap", 18)))
     bounds = QRectF(margin, margin, max(80.0, width - 2 * margin),
                     max(80.0, height - 2 * margin))
 
-    chosen = layout_type if layout_type in LAYOUT_TYPES else "Auto"
-    if chosen == "Auto":
-        chosen = rng.choice(("Grid", "Mosaic", "Hero", "Filmstrip"))
-    if chosen == "Mosaic":
+    chosen = layout_type if layout_type in LAYOUT_TYPES else "自动"
+    if chosen == "自动":
+        chosen = rng.choice(("网格", "马赛克", "主图", "胶片条"))
+    if chosen == "马赛克":
         rects = _mosaic_layout(count, bounds, gap, rng)
-    elif chosen == "Hero":
+    elif chosen == "主图":
         rects = _hero_layout(count, bounds, gap)
-    elif chosen == "Filmstrip":
+    elif chosen == "胶片条":
         rects = _filmstrip_layout(count, bounds, gap)
     else:
         rects = _grid_layout(count, bounds, gap)
-    return rects, f"{count} photos  ·  {chosen.lower()}  ·  {aspect_name}", (width, height)
+    return rects, f"{count} 张照片  ·  {chosen.lower()}  ·  {aspect_name}", (width, height)

@@ -1,5 +1,5 @@
 """
-photo_dialog.py — "Photo in Bubble" popup (Balloon+'s Photo tab as a dialog).
+photo_dialog.py — "气泡内照片" popup (Balloon+'s Photo tab as a dialog).
 
 Keeps the inset-photo controls out of the always-on inspector: they only
 matter once a bubble actually has a photo, so they live behind a button and
@@ -56,7 +56,7 @@ class PhotoInBubbleDialog(QDialog):
 
     def __init__(self, bubble, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Photo in Bubble")
+        self.setWindowTitle("气泡内照片")
         self.setModal(True)
         self.resize(430, 620)
         self._bubble = bubble
@@ -74,12 +74,12 @@ class PhotoInBubbleDialog(QDialog):
 
         pick_row = QHBoxLayout()
         pick_row.setSpacing(8)
-        self._pick = QPushButton("Choose Image…")
+        self._pick = QPushButton("选择图片…")
         self._pick.setObjectName("LayerActionButton")
         self._pick.setMinimumHeight(32)
         self._pick.clicked.connect(self._on_pick)
         pick_row.addWidget(self._pick, stretch=2)
-        self._remove = QPushButton("Remove")
+        self._remove = QPushButton("移除")
         self._remove.setObjectName("LayerActionButton")
         self._remove.setMinimumHeight(32)
         self._remove.clicked.connect(self._on_remove)
@@ -88,10 +88,10 @@ class PhotoInBubbleDialog(QDialog):
 
         self._sliders = {}
         for key, label, lo, hi, suffix in (
-            ("spacing", "Spacing", 0, 90, " %"),
-            ("blur", "Blur", 0, 40, ""),
-            ("opacity", "Opacity", 0, 100, " %"),
-            ("zoom", "Zoom", 50, 400, " %"),
+            ("spacing", "间距", 0, 90, " %"),
+            ("blur", "模糊", 0, 40, ""),
+            ("opacity", "不透明度", 0, 100, " %"),
+            ("zoom", "缩放", 50, 400, " %"),
         ):
             row = QHBoxLayout()
             name = QLabel(label)
@@ -120,7 +120,7 @@ class PhotoInBubbleDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        done = QPushButton("Done")
+        done = QPushButton("完成")
         done.setObjectName("PrimaryButton")
         done.setMinimumSize(110, 34)
         done.setDefault(True)
@@ -180,7 +180,7 @@ class PhotoInBubbleDialog(QDialog):
     def _on_pick(self):
         from file_dialogs import open_file
         exts = " ".join(f"*{e}" for e in IMAGE_EXTENSIONS)
-        path = open_file(self, "Choose Image for Bubble", f"Images ({exts})")
+        path = open_file(self, "为气泡选择图片", f"图片 ({exts})")
         if not path:
             return
         pm = QPixmap(path)
@@ -195,7 +195,7 @@ class PhotoInBubbleDialog(QDialog):
 
     def _refresh(self):
         has = self._bubble.has_inset_photo()
-        self._pick.setText("Replace Image…" if has else "Choose Image…")
+        self._pick.setText("更换图片…" if has else "选择图片…")
         self._remove.setEnabled(has)
         for slider, _label, _suffix in self._sliders.values():
             slider.setEnabled(has)

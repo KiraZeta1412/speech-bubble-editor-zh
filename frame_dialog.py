@@ -16,7 +16,7 @@ from PyQt6.QtCore import Qt, QRectF, QSize
 
 from frames import FrameSettings, FRAME_STYLES, FRAME_COLORS, apply_frame
 
-SIZE_CHOICES = (("Small", 0.35), ("Medium", 0.6), ("Large", 0.8), ("Original", 1.0))
+SIZE_CHOICES = (("小", 0.35), ("中", 0.6), ("大", 0.8), ("原始", 1.0))
 
 
 class FrameStyleButton(QToolButton):
@@ -83,7 +83,7 @@ class ColorSwatch(QToolButton):
 class FrameDialog(QDialog):
     def __init__(self, source: QImage, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Export — Frame & Caption")
+        self.setWindowTitle("导出 — 画框与说明文字")
         self.setModal(True)
         self.resize(720, 780)
         self._source = source
@@ -102,7 +102,7 @@ class FrameDialog(QDialog):
         lay.addWidget(self._preview, stretch=1)
 
         # --- frame styles -------------------------------------------------
-        lay.addWidget(self._section_label("Frames"))
+        lay.addWidget(self._section_label("画框"))
         style_row = QHBoxLayout()
         style_row.setSpacing(6)
         self._style_group = QButtonGroup(self)
@@ -119,7 +119,7 @@ class FrameDialog(QDialog):
         lay.addLayout(style_row)
 
         # --- colours + two-tone -------------------------------------------
-        lay.addWidget(self._section_label("Frame color"))
+        lay.addWidget(self._section_label("画框颜色"))
         color_row = QHBoxLayout()
         color_row.setSpacing(6)
         self._color_group = QButtonGroup(self)
@@ -132,23 +132,23 @@ class FrameDialog(QDialog):
             if hexv == "#ffffff":
                 sw.setChecked(True)
         color_row.addStretch()
-        self._two_tone = QCheckBox("Two-tone")
-        self._two_tone.setToolTip("Add a contrasting second tone to the frame")
+        self._two_tone = QCheckBox("双色")
+        self._two_tone.setToolTip("为画框添加对比色")
         self._two_tone.toggled.connect(self._set_two_tone)
         color_row.addWidget(self._two_tone)
         lay.addLayout(color_row)
 
         # --- caption -------------------------------------------------------
-        lay.addWidget(self._section_label("Caption"))
+        lay.addWidget(self._section_label("旁白框"))
         cap_row = QHBoxLayout()
         cap_row.setSpacing(8)
         self._caption = QLineEdit()
-        self._caption.setPlaceholderText("Optional caption printed on the frame")
+        self._caption.setPlaceholderText("可选：在画框上打印说明文字")
         self._caption.textChanged.connect(self._set_caption)
         cap_row.addWidget(self._caption, stretch=1)
         self._pos_combo = QComboBox()
-        self._pos_combo.addItems(("Bottom", "Top"))
-        self._pos_combo.setToolTip("Caption position")
+        self._pos_combo.addItems(("底部", "顶部"))
+        self._pos_combo.setToolTip("说明文字位置")
         self._pos_combo.currentTextChanged.connect(
             lambda t: self._update(caption_position=t.lower()))
         cap_row.addWidget(self._pos_combo)
@@ -165,7 +165,7 @@ class FrameDialog(QDialog):
         self._font_combo.currentTextChanged.connect(
             lambda t: self._update(caption_font=t))
         font_row.addWidget(self._font_combo, stretch=1)
-        font_row.addWidget(QLabel("Size"))
+        font_row.addWidget(QLabel("大小"))
         self._size_slider = QSlider(Qt.Orientation.Horizontal)
         self._size_slider.setRange(4, 30)
         self._size_slider.setValue(10)
@@ -198,11 +198,11 @@ class FrameDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton("取消")
         cancel.setMinimumSize(96, 34)
         cancel.clicked.connect(self.reject)
         buttons.addWidget(cancel)
-        ok = QPushButton("Export…")
+        ok = QPushButton("导出…")
         ok.setObjectName("PrimaryButton")
         ok.setMinimumSize(110, 34)
         ok.setDefault(True)
@@ -247,7 +247,7 @@ class FrameDialog(QDialog):
         framed = apply_frame(self._source, self._cfg)
         w = max(1, int(framed.width() * self._scale))
         h = max(1, int(framed.height() * self._scale))
-        self._size_label.setText(f"Output size:  {w} × {h} px")
+        self._size_label.setText(f"输出尺寸：  {w} × {h} px")
         box = self._preview.size()
         pm = QPixmap.fromImage(framed).scaled(
             QSize(max(80, box.width() - 8), max(80, box.height() - 8)),

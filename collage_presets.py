@@ -7,12 +7,12 @@ from PyQt6.QtCore import QSettings
 
 ORG = "Long Weekend Labs"
 APP = "Speech Bubble Editor"
-FACTORY_NAME = "Midnight"
+FACTORY_NAME = "午夜"
 FACTORY_PRESET = {
     "layout": {
         "photo_count": 4,
-        "layout_type": "Mosaic",
-        "aspect_ratio": "Portrait · 4:5",
+        "layout_type": "马赛克",
+        "aspect_ratio": "竖版 · 4:5",
         "margin": 28,
         "gap": 18,
     },

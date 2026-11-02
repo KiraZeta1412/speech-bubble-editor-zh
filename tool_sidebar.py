@@ -18,20 +18,20 @@ from icons import (
 
 # (id, label, normal_svg, shortcut_or_none, checkable, in_tool_group)
 TOOL_DEFS = [
-    ("select",  "Select",  ICON_SELECT,  "V",      True,  True),
-    ("move",    "Move",    ICON_MOVE,    "M",      True,  True),
-    ("crop",    "Crop",    ICON_CROP,    "C",      False, False),
-    ("rotate",  "Rotate",  ICON_ROTATE,  "R",      False, False),
-    ("bubble",  "Bubble",  ICON_BUBBLE,  "Ctrl+B", False, False),
-    ("text",    "Text",    ICON_TEXT,    "T",      False, False),
-    ("lines",   "Lines",   ICON_SPEEDLINES, None,  False, False),
-    ("blur",    "Blur",    ICON_BLUR,    None,     False, False),
-    ("pixelate","Pixelate",ICON_PIXELATE,None,     False, False),
-    ("layers",  "Layers",  ICON_LAYERS,  "Ctrl+L", False, False),
-    ("meme",    "Meme",    ICON_MEME,    None,     True,  False),
-    ("dual",    "Dual",    ICON_DUAL,    None,     True,  False),
-    ("collage", "Collage", ICON_COLLAGE, None,     True,  False),
-    ("manga",   "Comic",   ICON_MANGA,   None,     True,  False),
+    ("select",  "选择",  ICON_SELECT,  "V",      True,  True),
+    ("move",    "移动",    ICON_MOVE,    "M",      True,  True),
+    ("crop",    "裁剪",    ICON_CROP,    "C",      False, False),
+    ("rotate",  "旋转",  ICON_ROTATE,  "R",      False, False),
+    ("bubble",  "气泡",  ICON_BUBBLE,  "Ctrl+B", False, False),
+    ("text",    "文字",    ICON_TEXT,    "T",      False, False),
+    ("lines",   "线条",   ICON_SPEEDLINES, None,  False, False),
+    ("blur",    "模糊",    ICON_BLUR,    None,     False, False),
+    ("pixelate","像素化",ICON_PIXELATE,None,     False, False),
+    ("layers",  "图层",  ICON_LAYERS,  "Ctrl+L", False, False),
+    ("meme",    "梗图",    ICON_MEME,    None,     True,  False),
+    ("dual",    "双格",    ICON_DUAL,    None,     True,  False),
+    ("collage", "拼贴", ICON_COLLAGE, None,     True,  False),
+    ("manga",   "漫画",   ICON_MANGA,   None,     True,  False),
 ]
 
 MEDIA_GATED = {"crop", "rotate", "bubble", "text", "lines", "blur", "pixelate",
@@ -113,9 +113,9 @@ class ToolSidebar(QWidget):
         # Collapse button
         self._collapse = QToolButton()
         self._collapse.setObjectName("SidebarCollapse")
-        self._collapse.setText("«  Compact")
+        self._collapse.setText("«  紧凑")
         self._collapse.setFixedHeight(28)
-        self._collapse.setToolTip("Use a compact icon-only toolbar")
+        self._collapse.setToolTip("使用仅显示图标的紧凑工具栏")
         self._collapse.clicked.connect(self._toggle_compact)
         lay.addWidget(self._collapse)
 
@@ -173,9 +173,9 @@ class ToolSidebar(QWidget):
             )
             btn.setFixedSize(40 if self._compact else 88, 34)
             btn.setText(label)
-        self._collapse.setText("»" if self._compact else "«  Compact")
+        self._collapse.setText("»" if self._compact else "«  紧凑")
         self._collapse.setToolTip(
-            "Show tool labels" if self._compact else "Use a compact icon-only toolbar")
+            "显示工具名称" if self._compact else "使用仅显示图标的紧凑工具栏")
 
     # ------------------------------------------------------------------
     # Public API (mirrors v3 ToolSidebar)

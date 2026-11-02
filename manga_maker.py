@@ -1,6 +1,6 @@
-"""Manga Maker canvas items and tier-based random page layouts.
+"""Manga Maker canvas items and tier-based random page布局s.
 
-The page layout deliberately uses horizontal tiers instead of unconstrained
+The page布局 deliberately uses horizontal tiers instead of unconstrained
 random rectangles.  This keeps the reading order clear while still producing
 unequal, manga-like panel sizes on every regeneration.
 """
@@ -57,18 +57,18 @@ def generate_layout(panel_count: int | None = None, rng: random.Random | None = 
     row_gutter = float(options.get("row_gutter", rng.uniform(14.0, 24.0)))
     col_gutter = float(options.get("column_gutter", rng.uniform(9.0, 16.0)))
     variation = max(0.0, min(1.0, float(options.get("variation", 48)) / 100.0))
-    composition = str(options.get("composition", "Random"))
-    reading_direction = str(options.get("reading_direction", "Right to left"))
+    composition = str(options.get("composition", "随机"))
+    reading_direction = str(options.get("reading_direction", "从右到左"))
 
     candidates = list(TIER_PATTERNS[count])
-    if composition == "Feature":
+    if composition == "突出":
         candidates = [pattern for pattern in candidates if 1 in pattern] or candidates
-    elif composition == "Balanced":
+    elif composition == "均衡":
         candidates = [pattern for pattern in candidates
                       if max(pattern) - min(pattern) <= 1] or candidates
-    elif composition == "Dialogue":
+    elif composition == "对话":
         candidates = [pattern for pattern in candidates if max(pattern) <= 3] or candidates
-    elif composition == "Action":
+    elif composition == "动作":
         candidates = [pattern for pattern in candidates
                       if max(pattern) >= 3 or 1 in pattern] or candidates
 
@@ -82,7 +82,7 @@ def generate_layout(panel_count: int | None = None, rng: random.Random | None = 
     feature_row = next((i for i, columns in enumerate(pattern) if columns == 1),
                        rng.randrange(row_count))
     emphasis = 1.0 + variation * rng.uniform(0.18, 0.48)
-    if composition != "Balanced":
+    if composition != "均衡":
         row_weights[feature_row] *= emphasis
     total_rows = sum(row_weights)
     row_weights = [weight / total_rows for weight in row_weights]
@@ -100,12 +100,12 @@ def generate_layout(panel_count: int | None = None, rng: random.Random | None = 
             panel_w = row_w * col_weights[col_index]
             row_rects.append(QRectF(x, y, panel_w, row_h))
             x += panel_w + col_gutter
-        rects.extend(reversed(row_rects) if reading_direction == "Right to left"
+        rects.extend(reversed(row_rects) if reading_direction == "从右到左"
                      else row_rects)
         y += row_h + row_gutter
 
-    family = composition.lower() if composition != "Random" else "hand-inked"
-    name = f"{count} panels  ·  {family} " + "–".join(str(n) for n in pattern)
+    family = composition.lower() if composition != "随机" else "手绘墨线"
+    name = f"{count} 格  ·  {family} " + "–".join(str(n) for n in pattern)
     return rects, name, count
 
 
@@ -115,7 +115,7 @@ class MangaPanelItem(QGraphicsObject):
     def __init__(self, index: int, rect: QRectF, pixmap: QPixmap | None = None,
                  style: dict | None = None, seed: int | None = None,
                  show_number: bool = False,
-                 reading_direction: str = "Right to left"):
+                 reading_direction: str = "从右到左"):
         super().__init__()
         self.index = index
         self._width = rect.width()
@@ -151,7 +151,7 @@ class MangaPanelItem(QGraphicsObject):
         return QPainterPath(self._panel_path)
 
     def set_panel_rect(self, rect: QRectF):
-        """Morph this panel to a new layout rectangle without losing its image."""
+        """Morph this panel to a new布局 rectangle without losing its image."""
         old_w = max(1.0, self._width)
         old_h = max(1.0, self._height)
         self.prepareGeometryChange()
@@ -395,7 +395,7 @@ class MangaPanelItem(QGraphicsObject):
             painter.drawText(
                 label_rect,
                 int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop),
-                "OPEN IMAGE\nDouble-click or drop",
+                "点击打开图片\n双击或拖放",
             )
         else:
             painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -453,7 +453,7 @@ class MangaPanelItem(QGraphicsObject):
             diameter = max(42.0, min(68.0, min(self._width, self._height) * 0.11))
             pad = max(16.0, diameter * 0.34)
             x = (self._width - pad - diameter
-                 if self._reading_direction == "Right to left" else pad)
+                 if self._reading_direction == "从右到左" else pad)
             badge = QRectF(x, pad, diameter, diameter)
             painter.setPen(QPen(QColor("#ff8a3d"), 3.0))
             painter.setBrush(QColor(20, 20, 20, 205))
@@ -561,10 +561,10 @@ class MangaPanelItem(QGraphicsObject):
         from PyQt6.QtWidgets import QMenu
 
         menu = QMenu()
-        open_action = menu.addAction("Open / Replace Image…")
-        fill_action = menu.addAction("Fill Frame")
-        fit_action = menu.addAction("Show Whole Image")
-        clear_action = menu.addAction("Clear Panel")
+        open_action = menu.addAction("打开 / Replace 图片…")
+        fill_action = menu.addAction("充满画框")
+        fit_action = menu.addAction("显示完整图片")
+        clear_action = menu.addAction("清除分格")
         fill_action.setEnabled(self.has_image())
         fit_action.setEnabled(self.has_image())
         clear_action.setEnabled(self.has_image())

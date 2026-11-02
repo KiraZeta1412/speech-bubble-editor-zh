@@ -15,7 +15,7 @@ from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QPixmap
 from PyQt6.QtCore import Qt, QRect, QRectF, QPointF
 
 ASPECTS = (
-    ("Free", None), ("1:1", 1.0), ("4:3", 4 / 3), ("3:2", 3 / 2),
+    ("自由", None), ("1:1", 1.0), ("4:3", 4 / 3), ("3:2", 3 / 2),
     ("16:9", 16 / 9),
 )
 
@@ -239,7 +239,7 @@ class _CropArea(QWidget):
 class CropDialog(QDialog):
     def __init__(self, pixmap: QPixmap, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Crop Image")
+        self.setWindowTitle("裁剪图片")
         self.setModal(True)
         self.resize(760, 620)
 
@@ -255,10 +255,10 @@ class CropDialog(QDialog):
         self._size_label.setStyleSheet("color: #9a9a9a; font-size: 12px;")
         info_row.addWidget(self._size_label)
         info_row.addStretch()
-        info_row.addWidget(QLabel("Rotate"))
+        info_row.addWidget(QLabel("旋转"))
         self._turns = 0
-        for label, turns, tip in (("↺", 3, "Rotate 90° anticlockwise"),
-                                  ("↻", 1, "Rotate 90° clockwise")):
+        for label, turns, tip in (("↺", 3, "逆时针旋转 90°"),
+                                  ("↻", 1, "顺时针旋转 90°")):
             btn = QToolButton()
             btn.setObjectName("AlignButton")
             btn.setText(label)
@@ -270,7 +270,7 @@ class CropDialog(QDialog):
 
         chips = QHBoxLayout()
         chips.setSpacing(6)
-        chips.addWidget(QLabel("Aspect Ratio"))
+        chips.addWidget(QLabel("宽高比"))
         self._ratio_group = QButtonGroup(self)
         self._ratio_group.setExclusive(True)
         for label, ratio in ASPECTS:
@@ -288,12 +288,12 @@ class CropDialog(QDialog):
 
         self._portrait_btn = QToolButton()
         self._portrait_btn.setObjectName("AlignButton")
-        self._portrait_btn.setText("Portrait")
+        self._portrait_btn.setText("竖版")
         self._portrait_btn.setCheckable(True)
         self._portrait_btn.setFixedHeight(30)
         self._portrait_btn.setMinimumWidth(64)
         self._portrait_btn.setToolTip(
-            "Flip the aspect ratio to portrait (e.g. 16:9 becomes 9:16)")
+            "将宽高比切换为竖版（如 16:9 变为 9:16）")
         self._portrait_btn.toggled.connect(self._area.set_portrait)
         chips.addSpacing(10)
         chips.addWidget(self._portrait_btn)
@@ -302,11 +302,11 @@ class CropDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton("取消")
         cancel.setMinimumSize(96, 34)
         cancel.clicked.connect(self.reject)
         buttons.addWidget(cancel)
-        ok = QPushButton("Crop")
+        ok = QPushButton("裁剪")
         ok.setObjectName("PrimaryButton")
         ok.setMinimumSize(96, 34)
         ok.setDefault(True)
@@ -325,7 +325,7 @@ class CropDialog(QDialog):
         self._area.rotate(turns)
 
     def _update_size_label(self, rect: QRect):
-        self._size_label.setText(f"Crop size:  {rect.width()} × {rect.height()} px")
+        self._size_label.setText(f"裁剪尺寸：  {rect.width()} × {rect.height()} px")
 
     def crop_rect(self) -> QRect:
         return self._area.crop_rect()

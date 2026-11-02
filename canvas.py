@@ -200,7 +200,7 @@ class RightMediaPlaceholder(QGraphicsItem):
             int(Qt.AlignmentFlag.AlignVCenter) |
             int(Qt.TextFlag.TextWordWrap),
             "Double-click to open photo or video\n"
-            "or drop a file here",
+            "或将文件拖放到此处",
         )
 
     def mouseDoubleClickEvent(self, event):
@@ -349,12 +349,12 @@ class PhotoScene(QGraphicsScene):
         }
         self._manga_layout_settings = {
             "panel_count": 0,  # 0 = random
-            "composition": "Random",
+            "composition": "随机",
             "margin": 22,
             "row_gutter": 18,
             "column_gutter": 12,
             "variation": 48,
-            "reading_direction": "Right to left",
+            "reading_direction": "从右到左",
             "show_numbers": False,
         }
         self._collage_layout_seed: int | None = None
@@ -370,8 +370,8 @@ class PhotoScene(QGraphicsScene):
         }
         self._collage_layout_settings = {
             "photo_count": 4,
-            "layout_type": "Mosaic",
-            "aspect_ratio": "Portrait · 4:5",
+            "layout_type": "马赛克",
+            "aspect_ratio": "竖版 · 4:5",
             "margin": 28,
             "gap": 18,
         }
@@ -585,8 +585,8 @@ class PhotoScene(QGraphicsScene):
         top_y = py - bar_h
         bot_y = py + ph
         self.setSceneRect(QRectF(px, top_y, w, ph + 2 * bar_h))
-        self._meme_top = MemeBarItem(px, top_y, w, bar_h, "TOP TEXT")
-        self._meme_bot = MemeBarItem(px, bot_y, w, bar_h, "BOTTOM TEXT")
+        self._meme_top = MemeBarItem(px, top_y, w, bar_h, "顶部文字")
+        self._meme_bot = MemeBarItem(px, bot_y, w, bar_h, "底部文字")
         self.addItem(self._meme_top)
         self.addItem(self._meme_bot)
 
@@ -784,7 +784,7 @@ class PhotoScene(QGraphicsScene):
             self._dual_seam.set_feather(px)
 
     def _relayout_dual(self):
-        """Recompute dual layout after gap change."""
+        """Recompute dual布局 after gap change."""
         if not self._dual_mode or not self._photo_item:
             return
         lx = self._photo_item.pos().x()
@@ -982,11 +982,11 @@ class PhotoScene(QGraphicsScene):
 
     def apply_manga_theme(self, name: str):
         themes = {
-            "Warm paper": ("#f2eee5", "#e8e1d5", "#241f1b", "#746d65"),
-            "Classic ink": ("#ffffff", "#f4f4f2", "#111111", "#777773"),
-            "Noir": ("#171717", "#282828", "#f0ece2", "#aaa59b"),
-            "Rose pulp": ("#f3dadd", "#ead0d3", "#4b232b", "#9b6670"),
-            "Night blue": ("#17202b", "#243241", "#d5e1ec", "#8196aa"),
+            "暖纸": ("#f2eee5", "#e8e1d5", "#241f1b", "#746d65"),
+            "经典墨": ("#ffffff", "#f4f4f2", "#111111", "#777773"),
+            "黑色电影": ("#171717", "#282828", "#f0ece2", "#aaa59b"),
+            "玫瑰纸浆": ("#f3dadd", "#ead0d3", "#4b232b", "#9b6670"),
+            "夜蓝": ("#17202b", "#243241", "#d5e1ec", "#8196aa"),
         }
         colors = themes.get(name)
         if colors is None:
@@ -1310,7 +1310,7 @@ class PhotoScene(QGraphicsScene):
             panel = MangaPanelItem(
                 index, rect, pixmap, self._collage_style,
                 seed_source.randrange(2**31), show_number=False,
-                reading_direction="Left to right")
+                reading_direction="从左到右")
             self.addItem(panel)
             self._manga_panels.append(panel)
         self.setSceneRect(QRectF(0, 0, page_size[0], page_size[1]))
@@ -1337,7 +1337,7 @@ class PhotoScene(QGraphicsScene):
         if not self._collage_mode:
             return
         import random
-        choices = ["Grid", "Mosaic", "Hero", "Filmstrip"]
+        choices = ["网格", "马赛克", "主图", "胶片条"]
         current = str(self._collage_layout_settings["layout_type"])
         alternatives = [name for name in choices if name != current]
         self._collage_layout_settings["layout_type"] = (
@@ -1397,11 +1397,11 @@ class PhotoScene(QGraphicsScene):
 
     def apply_collage_theme(self, name: str):
         themes = {
-            "Gallery white": ("#ffffff", "#ffffff", "#eeeeee"),
-            "Midnight": ("#111318", "#111318", "#252933"),
-            "Warm cream": ("#efe5d3", "#fffaf0", "#e4d6c0"),
-            "Soft blush": ("#ead5d8", "#ffffff", "#dfc5ca"),
-            "Slate": ("#38404a", "#e8edf2", "#4b5663"),
+            "画廊白": ("#ffffff", "#ffffff", "#eeeeee"),
+            "午夜": ("#111318", "#111318", "#252933"),
+            "暖奶油": ("#efe5d3", "#fffaf0", "#e4d6c0"),
+            "柔粉": ("#ead5d8", "#ffffff", "#dfc5ca"),
+            "石板灰": ("#38404a", "#e8edf2", "#4b5663"),
         }
         colors = themes.get(name)
         if colors is None:
@@ -1426,7 +1426,7 @@ class PhotoScene(QGraphicsScene):
         }
 
     def apply_collage_preset(self, preset: dict, rebuild: bool = True):
-        """Apply a named/default preset with one layout rebuild."""
+        """Apply a named/default preset with one布局 rebuild."""
         layout = dict(preset.get("layout", {}))
         style = dict(preset.get("style", {}))
         for key in self._collage_layout_settings:
@@ -1461,7 +1461,7 @@ class PhotoScene(QGraphicsScene):
     def create_overlay_item(self, file_path: str):
         """Create a configured overlay MediaItem (not yet added to scene).
 
-        Returns a MediaItem ready to be pushed via AddOverlayCommand, or None
+        Returns a MediaItem ready to be pushed via 添加OverlayCommand, or None
         if the file cannot be opened.
         """
         import os as _os
@@ -1971,7 +1971,7 @@ class PhotoView(QGraphicsView):
             eyebrow.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1.2)
             painter.setFont(eyebrow)
             painter.drawText(cx + 32, cy + 28, card_w - 64, 18,
-                             int(Qt.AlignmentFlag.AlignLeft), "NEW COMPOSITION")
+                             int(Qt.AlignmentFlag.AlignLeft), "新建作品")
 
             # Main message
             painter.setPen(QPen(main_text_color))
@@ -1981,7 +1981,7 @@ class PhotoView(QGraphicsView):
             painter.setFont(f1)
             painter.drawText(
                 cx + 32, cy + 56, card_w - 64, 30,
-                int(Qt.AlignmentFlag.AlignLeft), "Start with your media"
+                int(Qt.AlignmentFlag.AlignLeft), "从你的媒体开始"
             )
 
             # Sub-message
@@ -1992,7 +1992,7 @@ class PhotoView(QGraphicsView):
             painter.drawText(
                 cx + 32, cy + 92, card_w - 64, 22,
                 int(Qt.AlignmentFlag.AlignLeft),
-                "Open a photo or video, then build bubbles, captions, and effects."
+                "打开照片或视频，然后添加气泡、旁白框和效果。"
             )
 
             button = QRectF(cx + 32, cy + 134, 164, 42)
@@ -2005,13 +2005,13 @@ class PhotoView(QGraphicsView):
             f3.setBold(True)
             painter.setFont(f3)
             painter.drawText(
-                button, int(Qt.AlignmentFlag.AlignCenter), "Open media…"
+                button, int(Qt.AlignmentFlag.AlignCenter), "打开媒体…"
             )
             painter.setPen(QPen(sub_text_color))
             f2.setPixelSize(12)
             painter.setFont(f2)
             painter.drawText(cx + 212, cy + 144, card_w - 244, 22,
-                             int(Qt.AlignmentFlag.AlignLeft), "or drop a file here")
+                             int(Qt.AlignmentFlag.AlignLeft), "或将文件拖放到此处")
             painter.restore()
 
     def mousePressEvent(self, event):
@@ -2155,24 +2155,24 @@ class ZoomBar(QWidget):
             return b
 
         layout.addStretch()
-        _btn("Fit",   "Fit entire image/video to window", self._on_fit,   width=36)
-        _btn("Width", "Fit width to viewport",            self._view.fit_width, width=48)
-        _btn("100%",  "Actual pixel size (1:1)",          self._on_100,   width=44)
+        _btn("适应",   "Fit entire image/video to window", self._on_fit,   width=36)
+        _btn("宽度", "宽度适应视口",            self._view.fit_width, width=48)
+        _btn("100%",  "实际像素尺寸 (1:1)",          self._on_100,   width=44)
 
         layout.addSpacing(6)
 
-        _btn("−", "Zoom out", self._view.zoom_out, width=26)
+        _btn("−", "缩小", self._view.zoom_out, width=26)
 
         self._slider = QSlider(Qt.Orientation.Horizontal)
         self._slider.setRange(self._SLIDER_MIN, self._SLIDER_MAX)
         self._slider.setValue(100)
         self._slider.setFixedWidth(160)
         self._slider.setFixedHeight(20)
-        self._slider.setToolTip("Drag to zoom")
+        self._slider.setToolTip("拖拽缩放")
         self._slider.valueChanged.connect(self._on_slider)
         layout.addWidget(self._slider)
 
-        _btn("+", "Zoom in", self._view.zoom_in, width=26)
+        _btn("+", "放大", self._view.zoom_in, width=26)
 
         layout.addSpacing(4)
         self._zoom_label = QLabel("100%")

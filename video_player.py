@@ -211,7 +211,7 @@ class VideoPlayer:
     # ------------------------------------------------------------------
 
     def load(self, path: str) -> bool:
-        """Open a video file.  Returns False if the file cannot be opened."""
+        """打开 a video file.  Returns False if the file cannot be opened."""
         import cv2
         cap = cv2.VideoCapture(path)
         if not cap.isOpened():

@@ -41,35 +41,35 @@ from undo_commands import (
 
 STYLE_LABELS = {
     # Authored SVG shapes first — these are the good ones.
-    "oval":    "Speech",
-    "round":   "Round",
-    "blob":    "Blob",
-    "softbox": "Soft box",
-    "wobble":  "Shaky",
-    "puffy":   "Puffy",
-    "explode": "Explode",
-    "panel":   "Panel",
-    "twin":    "Twin",
-    "triple":  "Triple",
+    "oval":    "对话",
+    "round":   "圆形",
+    "blob":    "圆润形",
+    "softbox": "柔角框",
+    "wobble":  "手绘",
+    "puffy":   "蓬松",
+    "explode": "爆裂",
+    "panel":   "分格",
+    "twin":    "双尾",
+    "triple":  "三尾",
     # Procedural shapes.
-    "cloud":   "Cloud",
-    "spiky":   "Starburst",
-    "burst":   "Burst",
-    "scallop": "Scallop",
-    "rect":    "Rectangle",
-    "wobbly":  "Hand-drawn",
+    "cloud":   "云朵",
+    "spiky":   "爆炸形",
+    "burst":   "放射形",
+    "scallop": "花边",
+    "rect":    "矩形",
+    "wobbly":  "手绘",
     # Text-only styles (no balloon body).
-    "text":    "Text only",
-    "scrim":   "Scrim",
-    "caption": "Caption",
+    "text":    "仅文字",
+    "scrim":   "遮罩",
+    "caption": "旁白框",
 }
 
 TAIL_SHAPE_LABELS = {
-    "wedge":  "Wedge tail",
-    "curved": "Curved swoosh tail",
-    "line":   "Thin line tail",
-    "dots":   "Thought dots",
-    "none":   "No tail",
+    "wedge":  "楔形尾巴",
+    "curved": "弧形尾巴",
+    "line":   "细线尾巴",
+    "dots":   "思考点",
+    "none":   "无尾巴",
 }
 
 
@@ -152,8 +152,8 @@ class PhotoCountStepper(QWidget):
         for btn in (self._remove, self._add):
             btn.setObjectName("PhotoCountButton")
             btn.setFixedSize(34, 30)
-        self._remove.setToolTip("Remove one empty photo slot")
-        self._add.setToolTip("Add one photo slot")
+        self._remove.setToolTip("移除一个空照片格")
+        self._add.setToolTip("添加一个照片格")
         self._label = QLabel()
         self._label.setObjectName("PhotoCountLabel")
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -177,7 +177,7 @@ class PhotoCountStepper(QWidget):
         self.valueChanged.emit(value)
 
     def _sync(self):
-        self._label.setText(f"{self._value} photos")
+        self._label.setText(f"{self._value} 张照片")
         self._remove.setEnabled(self._value > 2)
         self._add.setEnabled(self._value < 9)
 
@@ -192,7 +192,7 @@ class CollageTemplateButton(QToolButton):
         self._vertical = True
         self.setCheckable(True)
         self.setFixedSize(62, 70)
-        self.setToolTip(f"Use the {label.lower()} layout")
+        self.setToolTip(f"使用{label.lower()}布局")
 
     def set_vertical(self, vertical: bool):
         self._vertical = bool(vertical)
@@ -221,17 +221,17 @@ class CollageTemplateButton(QToolButton):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(fill)
         x, y, w, h = page.x() + 2, page.y() + 2, page.width() - 4, page.height() - 4
-        if self.layout_type == "Grid":
+        if self.layout_type == "网格":
             painter.drawRect(QRectF(x, y, (w-gap)/2, (h-gap)/2))
             painter.drawRect(QRectF(x+(w+gap)/2, y, (w-gap)/2, (h-gap)/2))
             painter.drawRect(QRectF(x, y+(h+gap)/2, (w-gap)/2, (h-gap)/2))
             painter.drawRect(QRectF(x+(w+gap)/2, y+(h+gap)/2, (w-gap)/2, (h-gap)/2))
-        elif self.layout_type == "Mosaic":
+        elif self.layout_type == "马赛克":
             painter.drawRect(QRectF(x, y, w*0.58-gap/2, h))
             painter.drawRect(QRectF(x+w*0.58+gap/2, y, w*0.42-gap/2, (h-gap)/2))
             painter.drawRect(QRectF(x+w*0.58+gap/2, y+(h+gap)/2,
                                     w*0.42-gap/2, (h-gap)/2))
-        elif self.layout_type == "Hero":
+        elif self.layout_type == "主图":
             painter.drawRect(QRectF(x, y, w, h*0.58-gap/2))
             third = (w-gap*2)/3
             for index in range(3):
@@ -268,8 +268,8 @@ class CollageTemplateStrip(QWidget):
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(5)
-        for layout_type, label in (("Grid", "Grid"), ("Mosaic", "Mosaic"),
-                                   ("Hero", "Hero"), ("Filmstrip", "Strip")):
+        for layout_type, label in (("网格", "网格"), ("马赛克", "马赛克"),
+                                   ("主图", "主图"), ("胶片条", "条带")):
             btn = CollageTemplateButton(layout_type, label)
             self._buttons[layout_type] = btn
             self._group.addButton(btn)
@@ -277,7 +277,7 @@ class CollageTemplateStrip(QWidget):
             btn.clicked.connect(
                 lambda checked, value=layout_type:
                 checked and self._select(value))
-        self.setCurrentText("Mosaic")
+        self.setCurrentText("马赛克")
 
     def _select(self, value):
         self._value = value
@@ -319,7 +319,7 @@ class SwatchButton(QPushButton):
         self._color = QColor(color)
         self.setFixedSize(24, 24)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Transparent" if color.alpha() == 0
+        self.setToolTip("透明" if color.alpha() == 0
                         else color.name().upper())
 
     def color(self) -> QColor:
@@ -346,7 +346,7 @@ def pick_color(anchor: QWidget, initial: QColor, parent: QWidget,
                allow_alpha: bool = True) -> QColor | None:
     """Balloon+-style palette popup under `anchor`.
 
-    Returns the picked colour, or None if dismissed. "Custom…" falls through
+    Returns the picked colour, or None if dismissed. "自定义…" falls through
     to the full QColorDialog (with alpha when allowed).
     """
     menu = QMenu(parent)
@@ -373,7 +373,7 @@ def pick_color(anchor: QWidget, initial: QColor, parent: QWidget,
             grid.addWidget(btn, row, col)
     lay.addLayout(grid)
 
-    custom = QPushButton("Custom…")
+    custom = QPushButton("自定义…")
     custom.setObjectName("LayerActionButton")
     custom.setMinimumHeight(26)
 
@@ -392,13 +392,13 @@ def pick_color(anchor: QWidget, initial: QColor, parent: QWidget,
     if result.get("custom"):
         opts = (QColorDialog.ColorDialogOption.ShowAlphaChannel
                 if allow_alpha else QColorDialog.ColorDialogOption(0))
-        color = QColorDialog.getColor(initial, parent, "Pick Color", opts)
+        color = QColorDialog.getColor(initial, parent, "选取颜色", opts)
         return color if color.isValid() else None
     return result.get("color")
 
 TAIL_POSITIONS = (
-    "Top Left", "Top Center", "Top Right", "Right",
-    "Bottom Right", "Bottom Center", "Bottom Left", "Left",
+    "左上", "顶部居中", "右上", "右",
+    "右下", "底部居中", "左下", "左",
 )
 
 
@@ -434,11 +434,11 @@ class CommitTextEdit(QTextEdit):
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
-        act_cut = menu.addAction("Cut")
-        act_copy = menu.addAction("Copy")
-        act_paste = menu.addAction("Paste")
+        act_cut = menu.addAction("剪切")
+        act_copy = menu.addAction("复制")
+        act_paste = menu.addAction("粘贴")
         menu.addSeparator()
-        act_select_all = menu.addAction("Select All")
+        act_select_all = menu.addAction("全选")
 
         cursor = self.textCursor()
         has_selection = cursor.hasSelection()
@@ -707,7 +707,7 @@ class BalloonPresetButton(QToolButton):
         p.drawRoundedRect(QRectF(1, 1, self.width() - 2, self.height() - 2), 6, 6)
         oval = QRectF(8, 8, self.width() - 16, self.height() - 16)
         if self._fill.alpha() == 0:
-            # Transparent fill: show the checkerboard so "Ghost" reads clearly.
+            # Transparent fill: show the checkerboard so "透明" reads clearly.
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor("#526a86"))
             p.drawEllipse(oval)
@@ -734,7 +734,7 @@ class OutlineWidthButton(QToolButton):
         self.setObjectName("StyleButton")
         self.setCheckable(True)
         self.setFixedSize(38, 32)
-        self.setToolTip("No outline" if width <= 0 else f"{width:g} px outline")
+        self.setToolTip("无描边" if width <= 0 else f"{width:g} px 描边")
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -922,10 +922,10 @@ class InspectorDock(QWidget):
 
         # Tabs split the full feature set into stable, predictable work areas.
         self._tabs = QTabBar()
-        self._tabs.addTab("Shape")
-        self._tabs.addTab("Text")
+        self._tabs.addTab("形状")
+        self._tabs.addTab("文字")
         self._tabs.addTab("FX")
-        self._tabs.addTab("Layers")
+        self._tabs.addTab("图层")
         self._tabs.setObjectName("InspectorTabBar")
         self._tabs.setExpanding(True)
         self._tabs.currentChanged.connect(self._stack_tab)
@@ -958,22 +958,22 @@ class InspectorDock(QWidget):
         fx_scroll, self._fx_lay = _make_page()
 
         self._shape_intro_title, self._shape_intro_text = self._add_tab_intro(
-            self._shape_lay, "Shape",
-            "Choose the bubble form, fill, border, and tail.")
+            self._shape_lay, "形状",
+            "选择气泡的形状、填充、边框和尾巴。")
         self._text_intro_title, self._text_intro_text = self._add_tab_intro(
-            self._text_lay, "Text",
-            "Edit wording, typography, alignment, and spacing.")
+            self._text_lay, "文字",
+            "编辑文案、排版、对齐和间距。")
         self._fx_intro_title, self._fx_intro_text = self._add_tab_intro(
-            self._fx_lay, "Effects",
-            "Add shadows, expression marks, photos, and motion effects.")
+            self._fx_lay, "效果",
+            "添加阴影、表情符号、照片和动效。")
 
         # Nothing selected = nothing to configure. Showing a wall of disabled
         # controls on launch was pure noise (and forced a scrollbar); each page
         # gets a short placeholder instead.
         self._placeholders = []
-        for lay_, msg in ((self._shape_lay, "Select a bubble to style it.\n\n"
-                                            "Double-click the photo to add one."),
-                          (self._text_lay, "Select a bubble to edit its text."),
+        for lay_, msg in ((self._shape_lay, "选择一个气泡来设置样式。\n\n"
+                                            "双击照片即可添加。"),
+                          (self._text_lay, "选择一个气泡来编辑其文字。"),
                           (self._fx_lay, "Select a bubble for shadow options,\n"
                                          "or add Speed Lines from the toolbar.")):
             ph = QLabel(msg)
@@ -997,19 +997,19 @@ class InspectorDock(QWidget):
         layers_lay.setSpacing(0)
 
         self._layers_intro_title, self._layers_intro_text = self._add_tab_intro(
-            layers_lay, "Layers",
-            "Control visibility and front-to-back order.")
+            layers_lay, "图层",
+            "控制可见性和前后顺序。")
 
         layers_header = QWidget()
         layers_header.setObjectName("InspectorSectionHeader")
         layers_header.setFixedHeight(38)
         layers_header_lay = QHBoxLayout(layers_header)
         layers_header_lay.setContentsMargins(14, 0, 12, 0)
-        layers_title = QLabel("LAYER STACK")
+        layers_title = QLabel("图层堆栈")
         layers_title.setObjectName("InspectorSectionTitle")
         layers_header_lay.addWidget(layers_title)
         layers_header_lay.addStretch()
-        layers_order = QLabel("FRONT TO BACK")
+        layers_order = QLabel("从前到后")
         layers_order.setObjectName("InspectorHint")
         layers_header_lay.addWidget(layers_order)
         layers_lay.addWidget(layers_header)
@@ -1028,7 +1028,7 @@ class InspectorDock(QWidget):
         self._layers_stack.addWidget(self._layers_list)
 
         self._layers_empty = QLabel(
-            "No editable layers yet.\n\nAdd a bubble, image layer, blur, pixelate, "
+            "No editable layers yet.\n\n添加 a bubble, image layer, blur, pixelate, "
             "or speed lines to start building the stack.")
         self._layers_empty.setObjectName("LayersEmptyState")
         self._layers_empty.setWordWrap(True)
@@ -1043,8 +1043,8 @@ class InspectorDock(QWidget):
         layer_actions.setContentsMargins(10, 10, 10, 12)
         layer_actions.setSpacing(8)
         for label, delta, tip in (
-            ("Move up", -1, "Move selected layer up"),
-            ("Move down", 1, "Move selected layer down"),
+            ("上移", -1, "上移选中图层"),
+            ("下移", 1, "下移选中图层"),
         ):
             btn = QPushButton(label)
             btn.setObjectName("LayerActionButton")
@@ -1127,7 +1127,7 @@ class InspectorDock(QWidget):
         self._set_controls_enabled(False)
 
     def _build_text_section(self):
-        section = AccordionSection("TEXT")
+        section = AccordionSection("文字")
         top = QHBoxLayout()
         top.addStretch()
         self._char_count = QLabel("0")
@@ -1138,8 +1138,8 @@ class InspectorDock(QWidget):
         self._text_edit.setObjectName("InspectorTextEdit")
         self._text_edit.setFixedHeight(50)
         self._text_edit.setAcceptRichText(False)
-        self._text_edit.setPlaceholderText("Type bubble text here…")
-        self._text_edit.setToolTip("Bubble text")
+        self._text_edit.setPlaceholderText("在此输入气泡文字…")
+        self._text_edit.setToolTip("气泡文字")
         self._text_edit.textChanged.connect(self._on_text_changed)
         self._text_edit.editCommitted.connect(self._on_text_committed)
         section.body_lay.addWidget(self._text_edit)
@@ -1153,7 +1153,7 @@ class InspectorDock(QWidget):
             edit.setObjectName("InspectorTextEdit")
             edit.setFixedHeight(44)
             edit.setAcceptRichText(False)
-            edit.setPlaceholderText(f"Text for lobe {i + 1}…")
+            edit.setPlaceholderText(f"气泡瓣文字 {i + 1}…")
             edit.textChanged.connect(
                 lambda idx=i: self._on_lobe_text_changed(idx))
             section.body_lay.addWidget(lbl)
@@ -1167,18 +1167,18 @@ class InspectorDock(QWidget):
 
     def _build_redact_section(self):
         """Controls for a selected blur/pixelate redaction box."""
-        section = AccordionSection("REDACT")
+        section = AccordionSection("打码")
         row = QHBoxLayout()
-        row.addWidget(self._label("Mode"))
+        row.addWidget(self._label("模式"))
         self._redact_mode_group = QButtonGroup(self)
         self._redact_mode_group.setExclusive(True)
         self._redact_blur_btn = QToolButton()
-        self._redact_blur_btn.setText("Blur")
+        self._redact_blur_btn.setText("模糊")
         self._redact_blur_btn.setCheckable(True)
-        self._redact_blur_btn.setToolTip("Soften the area beneath the box")
+        self._redact_blur_btn.setToolTip("柔化框下方区域")
         self._redact_blur_btn.clicked.connect(lambda: self._on_redact_mode("blur"))
         self._redact_pix_btn = QToolButton()
-        self._redact_pix_btn.setText("Pixelate")
+        self._redact_pix_btn.setText("像素化")
         self._redact_pix_btn.setCheckable(True)
         self._redact_pix_btn.setToolTip("Pixelate / mosaic the area beneath the box")
         self._redact_pix_btn.clicked.connect(lambda: self._on_redact_mode("pixelate"))
@@ -1188,7 +1188,7 @@ class InspectorDock(QWidget):
         row.addWidget(self._redact_pix_btn, stretch=1)
         section.body_lay.addLayout(row)
         self._redact_intensity = self._compact_slider_row(
-            section.body_lay, "Strength", 1, 100, 55, " %",
+            section.body_lay, "强度", 1, 100, 55, " %",
             self._on_redact_intensity,
             tooltip="Blur strength / pixel density")
         section.setVisible(False)
@@ -1232,16 +1232,16 @@ class InspectorDock(QWidget):
     # satellite puffs — often several at once. So these are toggles, not a
     # one-of-four choice.
     ACCENT_DEFS = (
-        ("halftone", "Halftone", "Printed dot-screen drop shadow"),
-        ("ticks",    "Ticks",    "Short radiating emphasis strokes"),
-        ("impact",   "Impact",   "Long tapered shout strokes"),
-        ("puffs",    "Puffs",    "Satellite bubbles trailing off"),
-        ("bolt",     "Bolt",     "Lightning-bolt shock spur"),
+        ("halftone", "半调", "印刷网点式投影"),
+        ("ticks",    "短线",    "短促放射强调线"),
+        ("impact",   "Impact",   "长锥形呼喊线"),
+        ("puffs",    "蓬点",    "拖尾的小气泡"),
+        ("bolt",     "闪电",     "闪电震击线"),
     )
 
     def _build_accent_section(self):
         """Comic emphasis marks inked around the balloon. Combinable."""
-        section = AccordionSection("EXPRESSION")
+        section = AccordionSection("表情")
         grid = QGridLayout()
         grid.setSpacing(5)
         self._accent_btns = {}
@@ -1254,15 +1254,15 @@ class InspectorDock(QWidget):
         section.body_lay.addLayout(grid)
         clear_row = QHBoxLayout()
         clear_row.addStretch()
-        clear = QPushButton("Clear all")
+        clear = QPushButton("全部清除")
         clear.setObjectName("LayerActionButton")
         clear.setMinimumHeight(26)
-        clear.setToolTip("Remove every expression mark")
+        clear.setToolTip("移除所有表情符号")
         clear.clicked.connect(self._on_accents_clear)
         clear_row.addWidget(clear)
         section.body_lay.addLayout(clear_row)
         self._accent_amount = self._compact_slider_row(
-            section.body_lay, "Amount", 0, 100, 70, " %", self._on_accent_amount,
+            section.body_lay, "数量", 0, 100, 70, " %", self._on_accent_amount,
             tooltip="How many strokes / how dense the halftone dots are")
         self._accent_section = section
         self._inspector_lay.addWidget(section)
@@ -1290,8 +1290,8 @@ class InspectorDock(QWidget):
         """Balloon+ keeps the inset-photo controls in their own screen rather
         than bolted onto the main panel — one button here, six sliders and a
         live preview in the popup, and the inspector stays short."""
-        section = AccordionSection("PHOTO IN BUBBLE")
-        self._photo_btn = QPushButton("Add Photo to Bubble…")
+        section = AccordionSection("气泡内的照片")
+        self._photo_btn = QPushButton("向气泡添加照片…")
         self._photo_btn.setObjectName("LayerActionButton")
         self._photo_btn.setMinimumHeight(32)
         self._photo_btn.setToolTip(
@@ -1330,20 +1330,20 @@ class InspectorDock(QWidget):
 
     def _sync_inset_controls(self, bubble):
         self._photo_btn.setText(
-            "Edit Bubble Photo…" if bubble.has_inset_photo()
-            else "Add Photo to Bubble…")
+            "编辑气泡照片…" if bubble.has_inset_photo()
+            else "向气泡添加照片…")
 
     def _build_speedlines_section(self):
         """Controls for a selected speed-lines overlay (Balloon+ effect)."""
-        section = AccordionSection("SPEED LINES")
+        section = AccordionSection("速度线")
         row = QHBoxLayout()
         row.setSpacing(4)
         self._lines_kind_group = QButtonGroup(self)
         self._lines_kind_group.setExclusive(True)
         self._lines_kind_btns = {}
-        for kind, label, tip in (("radial", "Radial", "Focus lines from the frame edges"),
-                                 ("burst", "Burst", "Fat sunburst wedges"),
-                                 ("streak", "Streak", "Horizontal motion streaks")):
+        for kind, label, tip in (("radial", "径向", "从画框边缘发散集中线"),
+                                 ("burst", "放射形", "粗大爆炸楔形"),
+                                 ("streak", "拖影", "水平动感拖影")):
             btn = QToolButton()
             btn.setObjectName("AlignButton")
             btn.setText(label)
@@ -1359,26 +1359,26 @@ class InspectorDock(QWidget):
         section.body_lay.addLayout(row)
 
         self._lines_density = self._compact_slider_row(
-            section.body_lay, "Density", 4, 320, 110, "", self._on_lines_density,
-            tooltip="Number of lines")
+            section.body_lay, "密度", 4, 320, 110, "", self._on_lines_density,
+            tooltip="线条数量")
         self._lines_thickness = self._compact_slider_row(
-            section.body_lay, "Weight", 1, 300, 10, " px", self._on_lines_thickness,
-            tooltip="Maximum line width at the frame edge")
+            section.body_lay, "粗细", 1, 300, 10, " px", self._on_lines_thickness,
+            tooltip="画框边缘处最大线宽")
         self._lines_inner = self._compact_slider_row(
-            section.body_lay, "Clear", 5, 90, 55, " %", self._on_lines_inner,
-            tooltip="How much of the centre stays clear of lines")
+            section.body_lay, "清除", 5, 90, 55, " %", self._on_lines_inner,
+            tooltip="中心留空范围大小")
 
         color_row = QHBoxLayout()
-        color_row.addWidget(self._label("Color"))
+        color_row.addWidget(self._label("颜色"))
         self._lines_color_btn = QPushButton()
         self._lines_color_btn.setFixedSize(30, 24)
-        self._lines_color_btn.setToolTip("Line color — click to pick")
+        self._lines_color_btn.setToolTip("线条颜色 — 点击选取")
         self._lines_color_btn.clicked.connect(self._on_lines_color)
         color_row.addWidget(self._lines_color_btn)
         color_row.addStretch()
         section.body_lay.addLayout(color_row)
 
-        hint = QLabel("Drag the red dot on the canvas to move the focus point.")
+        hint = QLabel("在画布上拖动红点可移动焦点。")
         hint.setObjectName("InspectorHint")
         hint.setWordWrap(True)
         section.body_lay.addWidget(hint)
@@ -1450,7 +1450,7 @@ class InspectorDock(QWidget):
     def _build_spacing_section(self):
         """Text-style extras: preset look, V./H. spacing + Fit to Box. One
         compact accordion section (only shown for text) — no pinned panel."""
-        section = AccordionSection("TEXT PRESETS")
+        section = AccordionSection("文字预设")
         # Preset looks as a compact 3-column button grid (in-flow, text-only —
         # no pinned panel, so it never reserves space or forces a scrollbar).
         grid = QGridLayout()
@@ -1465,15 +1465,15 @@ class InspectorDock(QWidget):
         section.body_lay.addLayout(grid)
 
         self._v_spacing = self._compact_slider_row(
-            section.body_lay, "V. Spacing", -20, 200, 0, " px",
-            self._on_v_spacing, tooltip="Extra space between lines")
+            section.body_lay, "竖间距", -20, 200, 0, " px",
+            self._on_v_spacing, tooltip="各行额外间距")
         self._h_spacing = self._compact_slider_row(
-            section.body_lay, "H. Spacing", -10, 100, 0, " px",
-            self._on_h_spacing, tooltip="Extra space between letters")
-        fit_btn = QPushButton("Fit Text to Box")
+            section.body_lay, "横间距", -10, 100, 0, " px",
+            self._on_h_spacing, tooltip="字符额外间距")
+        fit_btn = QPushButton("文字适应框")
         fit_btn.setObjectName("LayerActionButton")
         fit_btn.setMinimumHeight(30)
-        fit_btn.setToolTip("Auto-size the text to fill the box")
+        fit_btn.setToolTip("自动调整文字大小以填满框体")
         fit_btn.clicked.connect(self._on_fit_to_box)
         section.body_lay.addWidget(fit_btn)
         section.setVisible(False)
@@ -1498,7 +1498,7 @@ class InspectorDock(QWidget):
             self._bubble.fit_text_to_box()
 
     def _build_bubble_section(self):
-        section = AccordionSection("BUBBLE")
+        section = AccordionSection("气泡")
 
         # All bubble styles in a grid that fits the fixed inspector width.
         grid = QGridLayout()
@@ -1524,20 +1524,20 @@ class InspectorDock(QWidget):
     # Color"; a few more cover the cases people actually reach for).
     # (label, fill RGBA, stroke RGB, text RGB, tooltip)
     BALLOON_PRESETS = (
-        ("Classic", (255, 255, 255, 240), (20, 20, 20), (15, 15, 15),
-         "White balloon, black outline"),
-        ("Inverted", (18, 18, 18, 240), (255, 255, 255), (245, 245, 245),
-         "Black balloon, white outline"),
-        ("Ghost", (255, 255, 255, 0), (255, 255, 255), (255, 255, 255),
-         "No fill — outline and text only"),
-        ("Shout", (255, 216, 0, 255), (20, 20, 20), (15, 15, 15),
-         "Yellow balloon for emphasis"),
-        ("Alert", (214, 40, 40, 255), (20, 20, 20), (255, 255, 255),
-         "Red balloon, white text"),
+        ("经典", (255, 255, 255, 240), (20, 20, 20), (15, 15, 15),
+         "白气泡，黑边框"),
+        ("反色", (18, 18, 18, 240), (255, 255, 255), (245, 245, 245),
+         "黑气泡，白边框"),
+        ("透明", (255, 255, 255, 0), (255, 255, 255), (255, 255, 255),
+         "无填充 — 仅边框和文字"),
+        ("呼喊", (255, 216, 0, 255), (20, 20, 20), (15, 15, 15),
+         "黄色气泡用于强调"),
+        ("警告", (214, 40, 40, 255), (20, 20, 20), (255, 255, 255),
+         "红气泡，白文字"),
     )
 
     def _build_colors_section(self):
-        section = AccordionSection("FILL")
+        section = AccordionSection("填充")
 
         preset_row = QHBoxLayout()
         preset_row.setSpacing(6)
@@ -1553,12 +1553,12 @@ class InspectorDock(QWidget):
         section.body_lay.addLayout(preset_row)
 
         self._fill_btn, self._fill_hex = self._color_row(
-            section.body_lay, "Color", QColor(255, 255, 255), self._on_fill_color,
-            tooltip="Bubble fill color — click to pick"
+            section.body_lay, "颜色", QColor(255, 255, 255), self._on_fill_color,
+            tooltip="气泡填充色 — 点击选取"
         )
         self._bubble_opacity = self._compact_slider_row(
-            section.body_lay, "Opacity", 0, 100, 94, " %", self._on_bubble_opacity,
-            tooltip="Bubble fill opacity"
+            section.body_lay, "不透明度", 0, 100, 94, " %", self._on_bubble_opacity,
+            tooltip="气泡填充不透明度"
         )
         self._colors_section = section
         self._inspector_lay.addWidget(section)
@@ -1569,10 +1569,10 @@ class InspectorDock(QWidget):
     def _build_border_section(self):
         """Balloon+ treats the balloon outline as a first-class control
         (colour + a row of visual thickness presets) — so do we."""
-        section = AccordionSection("BORDER")
+        section = AccordionSection("边框")
         self._stroke_btn, self._stroke_hex = self._color_row(
-            section.body_lay, "Color", QColor(0, 0, 0), self._on_border_color,
-            tooltip="Bubble outline color"
+            section.body_lay, "颜色", QColor(0, 0, 0), self._on_border_color,
+            tooltip="气泡边框颜色"
         )
         width_row = QHBoxLayout()
         width_row.setSpacing(4)
@@ -1589,14 +1589,14 @@ class InspectorDock(QWidget):
         section.body_lay.addLayout(width_row)
 
         fine = QHBoxLayout()
-        fine.addWidget(self._label("Width"))
+        fine.addWidget(self._label("宽度"))
         fine.addStretch()
         self._border_width = QDoubleSpinBox()
         self._border_width.setRange(0.0, 40.0)
         self._border_width.setSingleStep(0.5)
         self._border_width.setSuffix(" px")
         self._border_width.setFixedWidth(84)
-        self._border_width.setToolTip("Bubble outline width in pixels")
+        self._border_width.setToolTip("气泡边框宽度（像素）")
         self._border_width.valueChanged.connect(self._on_border_width)
         fine.addWidget(self._border_width)
         section.body_lay.addLayout(fine)
@@ -1622,7 +1622,7 @@ class InspectorDock(QWidget):
             return
         b = self._bubble
         new_fill, new_stroke, new_text = QColor(*fill), QColor(*stroke), QColor(*text)
-        self._undo_stack.beginMacro("Balloon Preset")
+        self._undo_stack.beginMacro("气泡预设")
         if b.get_fill_color() != new_fill:
             self._undo_stack.push(
                 FillColorChangeCommand(b, b.get_fill_color(), new_fill))
@@ -1641,10 +1641,10 @@ class InspectorDock(QWidget):
             btn.setChecked(abs(w * scale - width) < max(0.05, 0.06 * scale))
 
     def _build_layer_section(self):
-        section = AccordionSection("LAYER")
+        section = AccordionSection("图层")
         self._layer_opacity = self._compact_slider_row(
-            section.body_lay, "Opacity", 0, 100, 100, " %", self._on_layer_opacity,
-            tooltip="Selected image layer opacity"
+            section.body_lay, "不透明度", 0, 100, 100, " %", self._on_layer_opacity,
+            tooltip="选中图片图层不透明度"
         )
         self._layer_section = section
         self._inspector_lay.addWidget(section)
@@ -1683,7 +1683,7 @@ class InspectorDock(QWidget):
     }
 
     def _build_typography_section(self):
-        section = AccordionSection("TYPOGRAPHY")
+        section = AccordionSection("排版")
 
         # Balloon+-style visual font tiles: each shows "Aa1" in its own face.
         # Populated deferred — bundled fonts register AFTER the window builds
@@ -1698,16 +1698,16 @@ class InspectorDock(QWidget):
         self._font_row_layout = row
         self._font_combo_placeholder = QWidget()
         self._font_combo_placeholder.setFixedHeight(32)
-        self._font_combo_placeholder.setToolTip("Font family")
+        self._font_combo_placeholder.setToolTip("字体族")
         row.addWidget(self._font_combo_placeholder, stretch=1)
         # 300 ms: after main._load_fonts registers the bundled fonts, so the
         # combo (and the tile grid above) list Klee One / Inter / Anton too.
         QTimer.singleShot(300, self._create_font_combo)
 
         self._weight_combo = QComboBox()
-        self._weight_combo.addItems(("Regular", "Bold", "Italic", "Bold Italic"))
+        self._weight_combo.addItems(("常规", "粗体", "斜体", "粗斜体"))
         self._weight_combo.setFixedWidth(86)
-        self._weight_combo.setToolTip("Font weight")
+        self._weight_combo.setToolTip("字重")
         self._weight_combo.currentIndexChanged.connect(self._on_font_weight)
         row.addWidget(self._weight_combo)
         section.body_lay.addLayout(row)
@@ -1715,10 +1715,10 @@ class InspectorDock(QWidget):
         # Font size as a slider — the chosen size is authoritative; resizing a
         # bubble no longer auto-shrinks the text (it grows the body to fit).
         size_row = QHBoxLayout()
-        size_row.addWidget(self._label("Size"))
+        size_row.addWidget(self._label("大小"))
         self._font_size = QSlider(Qt.Orientation.Horizontal)
         self._font_size.setRange(6, 96)
-        self._font_size.setToolTip("Font size")
+        self._font_size.setToolTip("字号")
         self._font_size.valueChanged.connect(self._on_font_size)
         self._font_size.valueChanged.connect(
             lambda v: self._font_size_value.setText(f"{v} px"))
@@ -1733,7 +1733,7 @@ class InspectorDock(QWidget):
         row2 = QHBoxLayout()
         self._text_color_btn = QPushButton()
         self._text_color_btn.setFixedSize(28, 28)
-        self._text_color_btn.setToolTip("Text color — click to pick")
+        self._text_color_btn.setToolTip("文字颜色 — 点击选取")
         self._text_color_btn.clicked.connect(self._on_text_color)
         row2.addWidget(self._text_color_btn)
 
@@ -1742,10 +1742,10 @@ class InspectorDock(QWidget):
         self._align_group.setExclusive(True)
         self._align_btns = {}
         ALIGN_OPTIONS = (
-            ("L", int(Qt.AlignmentFlag.AlignLeft),    "Align text left"),
-            ("C", int(Qt.AlignmentFlag.AlignCenter),  "Center text"),
-            ("R", int(Qt.AlignmentFlag.AlignRight),   "Align text right"),
-            ("J", int(Qt.AlignmentFlag.AlignJustify), "Justify text"),
+            ("L", int(Qt.AlignmentFlag.AlignLeft),    "文字左对齐"),
+            ("C", int(Qt.AlignmentFlag.AlignCenter),  "文字居中"),
+            ("R", int(Qt.AlignmentFlag.AlignRight),   "文字右对齐"),
+            ("J", int(Qt.AlignmentFlag.AlignJustify), "文字两端对齐"),
         )
         for label, alignment, tip in ALIGN_OPTIONS:
             btn = QToolButton()
@@ -1764,10 +1764,10 @@ class InspectorDock(QWidget):
 
         # Text outline (comic lettering) — colour + thickness
         outline_row = QHBoxLayout()
-        outline_row.addWidget(self._label("Outline"))
+        outline_row.addWidget(self._label("描边"))
         self._outline_color_btn = QPushButton()
         self._outline_color_btn.setFixedSize(28, 28)
-        self._outline_color_btn.setToolTip("Text outline color — click to pick")
+        self._outline_color_btn.setToolTip("文字描边颜色 — 点击选取")
         self._outline_color_btn.clicked.connect(self._on_text_outline_color)
         outline_row.addWidget(self._outline_color_btn)
         outline_row.addStretch()
@@ -1776,7 +1776,7 @@ class InspectorDock(QWidget):
         self._outline_width.setSingleStep(0.5)
         self._outline_width.setSuffix(" px")
         self._outline_width.setFixedWidth(76)
-        self._outline_width.setToolTip("Text outline thickness (0 = off)")
+        self._outline_width.setToolTip("文字描边粗细（0 = 关闭）")
         self._outline_width.valueChanged.connect(self._on_text_outline_width)
         outline_row.addWidget(self._outline_width)
         section.body_lay.addLayout(outline_row)
@@ -1785,7 +1785,7 @@ class InspectorDock(QWidget):
         self._inspector_lay.addWidget(section)
 
     def _build_tail_section(self):
-        section = AccordionSection("TAIL")
+        section = AccordionSection("尾巴")
 
         # Tail render shape — Balloon+-style pictogram picker
         shape_row = QHBoxLayout()
@@ -1805,7 +1805,7 @@ class InspectorDock(QWidget):
         # Number of tails (0-3)
         count_row = QHBoxLayout()
         count_row.setSpacing(6)
-        count_row.addWidget(self._label("Tails"))
+        count_row.addWidget(self._label("尾巴"))
         self._tail_count_group = QButtonGroup(self)
         self._tail_count_group.setExclusive(True)
         self._tail_count_btns = {}
@@ -1825,8 +1825,8 @@ class InspectorDock(QWidget):
         self._tail_position.addItems(TAIL_POSITIONS)
         self._tail_position.setVisible(False)
         self._tail_width = self._spin_row(
-            section.body_lay, "Width", 6, 400, 40, " px", self._on_tail_width,
-            tooltip="Width of the tail at its base in pixels"
+            section.body_lay, "宽度", 6, 400, 40, " px", self._on_tail_width,
+            tooltip="尾巴根部宽度（像素）"
         )
         self._tail_section = section
         self._stroke_section = section
@@ -1836,16 +1836,16 @@ class InspectorDock(QWidget):
         return
 
     def _build_shadow_section(self):
-        section = AccordionSection("SHADOW")
+        section = AccordionSection("阴影")
         self._shadow_check = None   # None/Soft/Solid IS the on-off control
 
         # Quick presets (Balloon+: none / soft / solid offset)
         preset_row = QHBoxLayout()
         preset_row.setSpacing(4)
         self._shadow_preset_btns = []
-        for name, tip in (("None", "No shadow"),
-                          ("Soft", "Soft blurred drop shadow"),
-                          ("Solid", "Hard offset comic shadow")):
+        for name, tip in (("None", "无阴影"),
+                          ("柔和", "柔和模糊投影"),
+                          ("实心", "硬边偏移漫画阴影")):
             btn = QPushButton(name)
             btn.setObjectName("PresetToggle")
             btn.setCheckable(True)
@@ -1857,33 +1857,33 @@ class InspectorDock(QWidget):
         section.body_lay.addLayout(preset_row)
 
         self._shadow_color_btn, _ = self._color_row(
-            section.body_lay, "Color", QColor(0, 0, 0), self._on_shadow_color,
-            tooltip="Shadow color"
+            section.body_lay, "颜色", QColor(0, 0, 0), self._on_shadow_color,
+            tooltip="阴影颜色"
         )
         self._shadow_blur = self._spin_row(
-            section.body_lay, "Blur", 0, 400, 12, " px", self._on_shadow_blur,
-            tooltip="Shadow blur radius in pixels"
+            section.body_lay, "模糊", 0, 400, 12, " px", self._on_shadow_blur,
+            tooltip="阴影模糊半径（像素）"
         )
         offset = QHBoxLayout()
-        offset.addWidget(self._label("Offset"))
+        offset.addWidget(self._label("偏移"))
         self._shadow_x = QSpinBox()
         self._shadow_x.setRange(-400, 400)
         self._shadow_x.setPrefix("X ")
         self._shadow_x.setSuffix(" px")
-        self._shadow_x.setToolTip("Shadow horizontal offset")
+        self._shadow_x.setToolTip("阴影水平偏移")
         self._shadow_x.valueChanged.connect(self._on_shadow_offset)
         self._shadow_y = QSpinBox()
         self._shadow_y.setRange(-400, 400)
         self._shadow_y.setPrefix("Y ")
         self._shadow_y.setSuffix(" px")
-        self._shadow_y.setToolTip("Shadow vertical offset")
+        self._shadow_y.setToolTip("阴影垂直偏移")
         self._shadow_y.valueChanged.connect(self._on_shadow_offset)
         offset.addWidget(self._shadow_x)
         offset.addWidget(self._shadow_y)
         section.body_lay.addLayout(offset)
         self._shadow_opacity = self._compact_slider_row(
-            section.body_lay, "Opacity", 0, 100, 80, " %", self._on_shadow_opacity,
-            tooltip="Shadow opacity (0 = invisible, 100 = fully opaque)"
+            section.body_lay, "不透明度", 0, 100, 80, " %", self._on_shadow_opacity,
+            tooltip="阴影不透明度（0 = 不可见，100 = 完全不透明）"
         )
         self._shadow_section = section
         self._inspector_lay.addWidget(section)
@@ -1891,8 +1891,8 @@ class InspectorDock(QWidget):
     def _build_defaults_section(self):
         """Balloon+-style "Default Balloon Settings": capture the selected
         bubble's look as the default for every NEW bubble."""
-        section = AccordionSection("NEW BUBBLE DEFAULTS")
-        self._save_default_btn = QPushButton("Save Current as Default")
+        section = AccordionSection("新气泡默认值")
+        self._save_default_btn = QPushButton("将当前设为默认")
         self._save_default_btn.setObjectName("LayerActionButton")
         self._save_default_btn.setMinimumHeight(30)
         self._save_default_btn.setToolTip(
@@ -1900,20 +1900,20 @@ class InspectorDock(QWidget):
             "tail and shadow settings")
         self._save_default_btn.clicked.connect(self._on_save_defaults)
         section.body_lay.addWidget(self._save_default_btn)
-        self._reset_default_btn = QPushButton("Reset to Factory Defaults")
+        self._reset_default_btn = QPushButton("重置为出厂默认")
         self._reset_default_btn.setObjectName("LayerActionButton")
         self._reset_default_btn.setMinimumHeight(30)
-        self._reset_default_btn.setToolTip("Forget the saved defaults")
+        self._reset_default_btn.setToolTip("忘记已保存的默认值")
         self._reset_default_btn.clicked.connect(self._on_reset_defaults)
         section.body_lay.addWidget(self._reset_default_btn)
         self._defaults_section = section
         self._inspector_lay.addWidget(section)
 
     def _build_manga_section(self):
-        section = AccordionSection("COMIC PAGE")
+        section = AccordionSection("漫画页")
 
         priority_note = QLabel(
-            "PAGE + FRAME — these remain visible after photos fill the panels.")
+            "页面 + 画框 — 照片填入分格后这些仍然可见。")
         priority_note.setObjectName("InspectorHint")
         priority_note.setWordWrap(True)
         priority_note.setToolTip(
@@ -1925,164 +1925,164 @@ class InspectorDock(QWidget):
             lambda: self._on_manga_color("page_color",
                                           self._manga_page_btn,
                                           self._manga_page_hex),
-            tooltip="Color of the paper and spaces between panels")
+            tooltip="纸张与分格间隙的颜色")
         self._manga_border_btn, self._manga_border_hex = self._color_row(
-            section.body_lay, "Frame ink", QColor("#241f1b"),
+            section.body_lay, "画框墨色", QColor("#241f1b"),
             lambda: self._on_manga_color("border_color",
                                           self._manga_border_btn,
                                           self._manga_border_hex),
             tooltip="Panel frame color; remains visible around imported images")
         self._manga_border_width = self._compact_slider_row(
-            section.body_lay, "Ink width", 1, 18, 6, " px",
+            section.body_lay, "墨线宽度", 1, 18, 6, " px",
             lambda value: self._on_manga_number("border_width", value),
-            tooltip="Thickness of the hand-drawn panel frame")
+            tooltip="手绘分格画框的粗细")
 
         self._manga_image_background = self._option_buttons(
-            section.body_lay, "WHEN A PHOTO IS SMALLER",
-            (("blur", "Blurred photo"), ("solid", "Panel color")), 2,
+            section.body_lay, "照片较小时",
+            (("blur", "模糊照片"), ("solid", "分格颜色")), 2,
             lambda value: self._set_manga_style_option(
                 "image_background", value),
-            "Choose what fills exposed space behind a shrunken photo",
+            "选择缩小照片后露出区域的填充方式",
             (
-                "Fill exposed space with a soft, enlarged copy of the photo",
-                "Fill exposed space with the palette's empty-panel color",
+                "用柔化放大的照片副本填充露出区域",
+                "用配色方案的空分格颜色填充露出区域",
             ))
 
         _, self._manga_presets, presets_lay = self._disclosure(
-            section.body_lay, "Preset palettes",
-            "Optional ready-made page and frame color combinations")
+            section.body_lay, "预设配色",
+            "可选的现成页面与画框配色组合")
         self._manga_theme = self._option_buttons(
-            presets_lay, "Choose a palette",
-            ("Warm paper", "Classic ink", "Noir", "Rose pulp", "Night blue"),
+            presets_lay, "选择配色",
+            ("暖纸", "经典墨", "黑色电影", "玫瑰纸浆", "夜蓝"),
             2, self._on_manga_theme,
             tooltip=("Apply a coordinated paper and ink palette; every color "
                      "remains editable"),
             option_tooltips=(
-                "Cream paper with warm dark ink",
-                "White paper with crisp black ink",
-                "Dark page with pale comic frames",
-                "Muted rose paper and burgundy ink",
-                "Deep blue page with cool pale ink",
+                "米色纸张配暖深墨",
+                "白色纸张配清晰黑墨",
+                "深色页面配浅色漫画画框",
+                "柔和玫瑰纸张配酒红墨",
+                "深蓝页面配冷调浅墨",
             ))
 
         self._manga_roughness = self._compact_slider_row(
-            section.body_lay, "Hand drawn", 0, 90, 34, "",
+            section.body_lay, "手绘", 0, 90, 34, "",
             lambda value: self._on_manga_number("roughness", value),
-            tooltip="How uneven and angled panel edges should feel")
+            tooltip="分格边缘的不规则与倾斜程度")
 
         _, self._manga_guides, guides_lay = self._disclosure(
-            section.body_lay, "Empty-panel appearance",
-            "Optional colors that disappear after images fill the panels")
+            section.body_lay, "空分格外观",
+            "填图后自动消失的可选颜色")
 
         self._manga_empty_btn, self._manga_empty_hex = self._color_row(
-            guides_lay, "Empty panels", QColor("#e8e1d5"),
+            guides_lay, "空分格", QColor("#e8e1d5"),
             lambda: self._on_manga_color("empty_color",
                                           self._manga_empty_btn,
                                           self._manga_empty_hex),
-            tooltip="Background color for panels without an image")
+            tooltip="无图片分格的背景颜色")
         self._manga_placeholder_btn, self._manga_placeholder_hex = self._color_row(
-            guides_lay, "Indicators", QColor("#746d65"),
+            guides_lay, "指示", QColor("#746d65"),
             lambda: self._on_manga_color("placeholder_color",
                                           self._manga_placeholder_btn,
                                           self._manga_placeholder_hex),
-            tooltip="Open-image indicator color")
+            tooltip="打开图片指示色")
         section.setVisible(False)
         self._manga_section = section
         self._inspector_lay.addWidget(section)
 
     def _build_manga_layout_section(self):
-        section = AccordionSection("COMIC LAYOUT")
+        section = AccordionSection("漫画布局")
 
         live_note = QLabel(
-            "START HERE — choose the page feel. Drop images into the panels. "
-            "Regenerate gives you another version of that choice.")
+            "从这里开始 —— 选择页面风格，把图片拖进分格。"
+            "点「重新生成」会换成同风格的另一版排布。")
         live_note.setObjectName("InspectorHint")
         live_note.setWordWrap(True)
         section.body_lay.addWidget(live_note)
 
         self._comic_quick_preset = self._option_buttons(
-            section.body_lay, "PAGE FEEL",
-            (("mixed", "Mixed page"),
-             ("classic", "Classic · 6"),
-             ("focus", "Big moment · 4"),
-             ("action", "Fast action · 8")),
+            section.body_lay, "页面风格",
+            (("mixed", "混合页面"),
+             ("classic", "经典 · 6"),
+             ("focus", "大场面 · 4"),
+             ("action", "快节奏 · 8")),
             2, self._on_comic_quick_preset,
-            "One click chooses a sensible panel count and composition",
+            "一键选择合适的格数与布局",
             (
                 "Variable panel count and composition; Regenerate makes the next version",
-                "Six balanced panels for general storytelling",
-                "Four panels with one emphasized image",
-                "Eight panels with stronger size contrast",
+                "六个均衡分格，适合一般叙事",
+                "四个分格，其中一张突出显示",
+                "八个分格，尺寸对比更强",
             ))
 
         _, self._manga_advanced, advanced = self._disclosure(
-            section.body_lay, "Fine tune layout",
-            "Optional controls for exact panel count, spacing, and reading order")
+            section.body_lay, "微调布局",
+            "可选控件，用于精确设置格数、间距和阅读顺序")
 
         count_tip = ("Choose exactly 4, 6, 7, or 8 panels. Changing this creates "
                      "the new count immediately without discarding loaded images.")
         count_tips = (
-            "Four spacious panels for slow pacing",
-            "Six panels for a conventional comic page",
-            "Seven panels for mixed pacing",
-            "Eight compact panels for fast pacing",
+            "四个宽松分格，节奏舒缓",
+            "六个分格，常规漫画页面",
+            "七个分格，混合节奏",
+            "八个紧凑分格，节奏明快",
         )
         self._manga_panel_count = self._option_buttons(
-            advanced, "Exact panel count", ("4", "6", "7", "8"),
+            advanced, "精确格数", ("4", "6", "7", "8"),
             4, self._on_manga_layout_count, count_tip, count_tips)
 
         composition_tips = (
-            "Emphasize one large establishing or climax panel",
-            "Keep panel sizes calmer and more evenly paced",
-            "Use moderate, readable panels suited to conversations",
-            "Create stronger size contrast for faster, dramatic pacing",
+            "突出一个大的场景或高潮分格",
+            "分格尺寸更平稳，节奏更均匀",
+            "使用适中的易读分格，适合对话场景",
+            "加大尺寸对比，营造更快的戏剧节奏",
         )
         self._manga_composition = self._option_buttons(
-            advanced, "Exact composition",
-            ("Feature", "Balanced", "Dialogue", "Action"), 2,
+            advanced, "精确布局",
+            ("突出", "均衡", "对话", "动作"), 2,
             lambda value: self._set_manga_layout_option("composition", value),
             ("Controls storytelling rhythm and relative panel sizes. Feature "
              "emphasizes one panel; Action creates stronger contrast."),
             composition_tips)
 
         self._manga_margin = self._compact_slider_row(
-            advanced, "Page margin", 0, 100, 22, " px",
+            advanced, "页面边距", 0, 100, 22, " px",
             lambda value: self._set_manga_layout_option("margin", value),
-            tooltip="Space around the outside of the comic page")
+            tooltip="漫画页面外围的空白")
         self._manga_row_gutter = self._compact_slider_row(
-            advanced, "Row gutter", 0, 80, 18, " px",
+            advanced, "行间距", 0, 80, 18, " px",
             lambda value: self._set_manga_layout_option("row_gutter", value),
-            tooltip="Space between horizontal story tiers")
+            tooltip="横向故事层之间的空白")
         self._manga_column_gutter = self._compact_slider_row(
-            advanced, "Panel gutter", 0, 80, 12, " px",
+            advanced, "分格间距", 0, 80, 12, " px",
             lambda value: self._set_manga_layout_option("column_gutter", value),
-            tooltip="Space between panels in the same tier")
+            tooltip="同一层内分格之间的空白")
         self._manga_variation = self._compact_slider_row(
-            advanced, "Emphasis", 0, 100, 48, " %",
+            advanced, "强调程度", 0, 100, 48, " %",
             lambda value: self._set_manga_layout_option("variation", value),
-            tooltip="How strongly panel sizes vary within the composition")
+            tooltip="布局中分格尺寸变化的强弱")
 
         direction_tip = (
-            "Sets image assignment and optional panel-number order within each row")
+            "设置每行内的图片分配和可选的格号顺序")
         self._manga_direction = self._option_buttons(
-            advanced, "Reading order",
-            (("Right to left", "Right → left"),
-             ("Left to right", "Left → right")), 2,
+            advanced, "阅读顺序",
+            (("从右到左", "从右 → 左"),
+             ("从左到右", "从左 → 右")), 2,
             lambda value: self._set_manga_layout_option(
                 "reading_direction", value),
             direction_tip,
-            ("Top-right toward bottom-left",
-             "Top-left toward bottom-right"))
+            ("从右上到左下",
+             "从左上到右下"))
 
-        self._manga_numbers = QCheckBox("Show panel numbers while editing")
+        self._manga_numbers = QCheckBox("编辑时显示格号")
         self._manga_numbers.setToolTip(
-            "Reading-order guides are shown on canvas but excluded from export")
+            "阅读顺序参考线仅在画布显示，不会导出")
         self._manga_numbers.toggled.connect(
             lambda value: self._set_manga_layout_option("show_numbers", value))
         advanced.addWidget(self._manga_numbers)
 
         note = QLabel(
-            "Fine-tune controls update the page live. Loaded images are never discarded.")
+            "微调控件会实时更新页面，已加载的图片绝不会被丢弃。")
         note.setObjectName("InspectorHint")
         note.setWordWrap(True)
         advanced.addWidget(note)
@@ -2098,53 +2098,59 @@ class InspectorDock(QWidget):
         if self._updating or self._scene is None:
             return
         presets = {
-            "mixed": (0, "Random"),
-            "classic": (6, "Balanced"),
-            "focus": (4, "Feature"),
-            "action": (8, "Action"),
+            "mixed": (0, "随机"),
+            "classic": (6, "均衡"),
+            "focus": (4, "突出"),
+            "action": (8, "动作"),
         }
         panel_count, composition = presets[name]
         self._scene.apply_manga_layout_preset(panel_count, composition)
         self.show_manga_settings()
 
     def _build_collage_layout_section(self):
-        section = AccordionSection("COLLAGE LAYOUT")
+        section = AccordionSection("拼贴布局")
         live_note = QLabel(
-            "Choose a direction, photo count, and layout. Then drop photos "
-            "into the frames.")
+            "选择页面方向、照片数量和布局，然后把照片"
+            "拖进画框。")
         live_note.setObjectName("InspectorHint")
         live_note.setWordWrap(True)
         section.body_lay.addWidget(live_note)
 
-        self._collage_orientation = QPushButton("↕  Vertical page")
-        self._collage_orientation.setObjectName("OrientationToggle")
-        self._collage_orientation.setToolTip(
-            "Switch the whole collage between vertical and horizontal")
-        self._collage_orientation.clicked.connect(
-            self._toggle_collage_orientation)
+        self._collage_orientation = OptionButtonGrid(
+            (("竖版 · 4:5", "竖向"),
+             ("横版 · 16:9", "横向"),
+             ("方形 · 1:1", "方形")),
+            columns=3,
+            tooltips=("竖版页面 · 4:5",
+                      "横版页面 · 16:9",
+                      "方形页面 · 1:1，适合发社交平台"),
+            parent=self)
+        self._collage_orientation.setToolTip("整体切换拼贴的页面比例")
+        self._collage_orientation.currentTextChanged.connect(
+            self._on_collage_aspect)
         section.body_lay.addWidget(self._collage_orientation)
 
         self._collage_count = PhotoCountStepper(4, self)
         self._collage_count.setToolTip(
-            "Use − or + to remove or add a photo frame (2–9)")
+            "使用 − 或 + 减少或添加照片画框（2–9）")
         self._collage_count.valueChanged.connect(
             lambda value: self._set_collage_layout_option(
                 "photo_count", value))
         section.body_lay.addWidget(self._collage_count)
 
-        layout_label = self._label("LAYOUT")
-        layout_label.setToolTip("Tap a picture to choose the frame arrangement")
+        layout_label = self._label("布局")
+        layout_label.setToolTip("点按图片选择画框排布")
         section.body_lay.addWidget(layout_label)
         self._collage_layout_type = CollageTemplateStrip(self)
         self._collage_layout_type.setToolTip(
-            "Visual previews of the available collage arrangements")
+            "可用拼贴排布的预览图")
         self._collage_layout_type.currentTextChanged.connect(
             lambda text: self._set_collage_layout_option(
                 "layout_type", text))
         section.body_lay.addWidget(self._collage_layout_type)
 
         shuffle_note = QLabel(
-            "Shuffle tries a different layout while keeping your photos.")
+            "随机排列会换一种布局，照片保持不变。")
         shuffle_note.setObjectName("InspectorHint")
         shuffle_note.setWordWrap(True)
         section.body_lay.addWidget(shuffle_note)
@@ -2154,93 +2160,93 @@ class InspectorDock(QWidget):
         self._inspector_lay.addWidget(section)
 
     def _build_collage_fx_section(self):
-        section = AccordionSection("COLLAGE COLORS & FRAME")
+        section = AccordionSection("拼贴颜色与画框")
         priority = QLabel(
-            "Background and frame are the primary collage styling controls; "
-            "photos cover the frame interiors.")
+            "背景与画框是拼贴的主要样式控制项，"
+            "照片会覆盖画框内部。")
         priority.setObjectName("InspectorHint")
         priority.setWordWrap(True)
         section.body_lay.addWidget(priority)
 
         self._collage_bg_btn, self._collage_bg_hex = self._color_row(
-            section.body_lay, "Background", QColor("#ffffff"),
+            section.body_lay, "背景", QColor("#ffffff"),
             lambda: self._on_collage_color(
                 "page_color", self._collage_bg_btn, self._collage_bg_hex),
-            tooltip="Canvas color visible around and between photo frames")
+            tooltip="照片画框周围和之间可见的画布颜色")
         self._collage_frame_btn, self._collage_frame_hex = self._color_row(
-            section.body_lay, "Frame color", QColor("#ffffff"),
+            section.body_lay, "画框颜色", QColor("#ffffff"),
             lambda: self._on_collage_color(
                 "border_color", self._collage_frame_btn, self._collage_frame_hex),
-            tooltip="Outline color drawn around each imported photo")
+            tooltip="每张导入照片外绘制的描边颜色")
         self._collage_frame_width = self._compact_slider_row(
-            section.body_lay, "Frame width", 0, 40, 0, " px",
+            section.body_lay, "画框宽度", 0, 40, 0, " px",
             lambda value: self._set_collage_style_option("border_width", value),
             tooltip="Outline thickness around every photo frame; zero hides it")
         self._collage_gap = self._compact_slider_row(
-            section.body_lay, "Spacing", 0, 120, 18, " px",
+            section.body_lay, "间距", 0, 120, 18, " px",
             lambda value: self._set_collage_layout_option("gap", value),
-            tooltip="Background or frame space separating adjacent photos")
+            tooltip="分隔相邻照片的背景或画框空隙")
         self._collage_corners = self._compact_slider_row(
-            section.body_lay, "Corner radius", 0, 180, 24, " px",
+            section.body_lay, "圆角半径", 0, 180, 24, " px",
             lambda value: self._set_collage_style_option("corner_radius", value),
             tooltip="Round every photo frame; zero keeps corners square")
         self._collage_margin = self._compact_slider_row(
-            section.body_lay, "Outer margin", 0, 160, 28, " px",
+            section.body_lay, "外边距", 0, 160, 28, " px",
             lambda value: self._set_collage_layout_option("margin", value),
-            tooltip="Background space around the outside of the collage")
+            tooltip="拼贴外围的背景空白")
 
         self._collage_image_background = self._option_buttons(
-            section.body_lay, "WHEN A PHOTO IS SMALLER",
-            (("blur", "Blurred photo"), ("solid", "Panel color")), 2,
+            section.body_lay, "照片较小时",
+            (("blur", "模糊照片"), ("solid", "分格颜色")), 2,
             lambda value: self._set_collage_style_option(
                 "image_background", value),
-            "Choose what fills exposed space behind a shrunken photo",
+            "选择缩小照片后露出区域的填充方式",
             (
-                "Instagram-style blurred photo fills the exposed space",
-                "The selected palette's frame-box color fills the exposed space",
+                "Instagram 风格模糊照片填充空白区域",
+                "所选配色方案的画框色填充空白区域",
             ))
 
         _, self._collage_presets, presets_lay = self._disclosure(
-            section.body_lay, "Preset palettes",
-            "Optional ready-made background and frame combinations")
+            section.body_lay, "预设配色",
+            "可选的现成背景与画框组合")
         self._collage_theme = self._option_buttons(
-            presets_lay, "Choose a palette",
-            ("Gallery white", "Midnight", "Warm cream", "Soft blush", "Slate"),
+            presets_lay, "选择配色",
+            ("画廊白", "午夜", "暖奶油", "柔粉", "石板灰"),
             2, self._on_collage_theme,
-            ("Preset pairs update Background and Frame color together; both "
-             "remain editable"),
+            ("预设会同时更新背景与画框颜色，两者"
+             "之后仍可单独调整"),
             (
-                "Clean white gallery background and frame",
-                "Dark background and frame",
-                "Cream background with a soft white frame",
-                "Blush background with a white frame",
-                "Slate background with a pale frame",
+                "干净的白色画廊背景与画框",
+                "深色背景与画框",
+                "奶油背景配柔和白色画框",
+                "腮红背景配白色画框",
+                "石板灰背景配浅色画框",
             ))
 
         _, self._collage_saved_presets, saved_lay = self._disclosure(
-            section.body_lay, "Saved presets",
-            "Save, reuse, rename, update, delete, or make a collage preset the default")
+            section.body_lay, "已保存的预设",
+            "保存、复用、重命名、更新、删除拼贴预设，或将其设为默认")
         self._collage_preset_combo = QComboBox()
         self._collage_preset_combo.setToolTip(
-            "Choose a named preset to apply it immediately")
+            "选择命名预设即可立即应用")
         self._collage_preset_combo.currentIndexChanged.connect(
             self._on_collage_preset_selected)
         saved_lay.addWidget(self._collage_preset_combo)
         preset_actions = QHBoxLayout()
-        save_preset = QPushButton("Save current…")
+        save_preset = QPushButton("保存当前…")
         save_preset.setObjectName("LayerActionButton")
-        save_preset.setToolTip("Save the current layout and colors with a name")
+        save_preset.setToolTip("为当前布局和颜色命名保存")
         save_preset.clicked.connect(self._save_collage_preset_as)
         preset_actions.addWidget(save_preset, stretch=1)
-        manage = QPushButton("Manage ▾")
+        manage = QPushButton("管理 ▾")
         manage.setObjectName("LayerActionButton")
-        manage.setToolTip("Update, rename, delete, or set the selected preset as default")
+        manage.setToolTip("更新、重命名、删除所选预设，或将其设为默认")
         menu = QMenu(manage)
-        menu.addAction("Update selected", self._update_collage_preset)
-        menu.addAction("Rename selected…", self._rename_collage_preset)
-        menu.addAction("Use selected on startup", self._default_collage_preset)
+        menu.addAction("更新所选", self._update_collage_preset)
+        menu.addAction("重命名所选…", self._rename_collage_preset)
+        menu.addAction("启动时使用所选", self._default_collage_preset)
         menu.addSeparator()
-        menu.addAction("Delete selected…", self._delete_collage_preset)
+        menu.addAction("删除所选…", self._delete_collage_preset)
         manage.setMenu(menu)
         preset_actions.addWidget(manage)
         saved_lay.addLayout(preset_actions)
@@ -2266,26 +2272,37 @@ class InspectorDock(QWidget):
                     finally:
                         self._updating = False
 
+    COLLAGE_ASPECTS = ("竖版 · 4:5", "横版 · 16:9", "方形 · 1:1")
+
+    def _on_collage_aspect(self, aspect: str):
+        """用户点了「竖向 / 横向 / 方形」中的一个。"""
+        if self._updating or self._scene is None:
+            return
+        self._scene.set_collage_layout_setting("aspect_ratio", aspect)
+        self._sync_collage_orientation(aspect)
+
     def _toggle_collage_orientation(self):
+        """在三种页面比例之间循环（保留给旧测试与快捷键用）。"""
         if self._updating or self._scene is None:
             return
         current = str(
             self._scene.collage_layout_settings()["aspect_ratio"])
-        new_value = (
-            "Landscape · 16:9"
-            if current != "Landscape · 16:9"
-            else "Portrait · 4:5"
-        )
+        try:
+            index = self.COLLAGE_ASPECTS.index(current)
+        except ValueError:
+            index = -1
+        new_value = self.COLLAGE_ASPECTS[(index + 1) % len(self.COLLAGE_ASPECTS)]
         self._scene.set_collage_layout_setting("aspect_ratio", new_value)
         self._sync_collage_orientation(new_value)
 
     def _sync_collage_orientation(self, aspect: str):
-        horizontal = aspect in ("Landscape · 16:9", "Photo · 3:2")
-        self._collage_orientation.setText(
-            "↔  Horizontal page" if horizontal else "↕  Vertical page")
-        self._collage_orientation.setToolTip(
-            "Switch to a vertical page" if horizontal
-            else "Switch to a horizontal page")
+        horizontal = aspect in ("横版 · 16:9", "照片 · 3:2")
+        if aspect in self.COLLAGE_ASPECTS:
+            self._collage_orientation.setCurrentText(aspect)
+        else:
+            # 预设里可能有 9:16 / 3:2 这类未列在按钮上的比例：
+            # 不假装选中任何一个，避免界面说谎。
+            self._collage_orientation.clearSelection()
         self._collage_layout_type.set_vertical(not horizontal)
 
     def _set_collage_style_option(self, key: str, value):
@@ -2307,7 +2324,7 @@ class InspectorDock(QWidget):
         current = select_name or self._selected_collage_preset_name()
         self._collage_preset_combo.blockSignals(True)
         self._collage_preset_combo.clear()
-        self._collage_preset_combo.addItem("Choose saved preset…", "")
+        self._collage_preset_combo.addItem("选择已保存预设…", "")
         for name in sorted(collage_presets.load_all(), key=str.casefold):
             self._collage_preset_combo.addItem(name, name)
         if current:
@@ -2316,7 +2333,7 @@ class InspectorDock(QWidget):
         self._collage_preset_combo.blockSignals(False)
         default = collage_presets.default_name()
         self._collage_default_preset.setText(
-            f"Startup preset: {default or collage_presets.FACTORY_NAME}")
+            f"启动预设： {default or collage_presets.FACTORY_NAME}")
 
     def _selected_collage_preset_name(self) -> str:
         if not hasattr(self, "_collage_preset_combo"):
@@ -2337,14 +2354,14 @@ class InspectorDock(QWidget):
         if self._scene is None:
             return
         name, accepted = QInputDialog.getText(
-            self, "Save Collage Preset", "Preset name:")
+            self, "保存拼贴预设", "预设名称：")
         name = name.strip()
         if not accepted or not name:
             return
         import collage_presets
         if name in collage_presets.load_all():
             overwrite = QMessageBox.question(
-                self, "Replace Preset", f"Replace the preset “{name}”?")
+                self, "替换预设", f"Replace the preset “{name}”?")
             if overwrite != QMessageBox.StandardButton.Yes:
                 return
         collage_presets.save(name, self._scene.collage_preset())
@@ -2362,14 +2379,14 @@ class InspectorDock(QWidget):
         if not old_name:
             return
         new_name, accepted = QInputDialog.getText(
-            self, "Rename Collage Preset", "Preset name:", text=old_name)
+            self, "重命名拼贴预设", "预设名称：", text=old_name)
         new_name = new_name.strip()
         if not accepted or not new_name or new_name == old_name:
             return
         import collage_presets
         if new_name in collage_presets.load_all():
             QMessageBox.information(
-                self, "Preset Exists", "Choose a different preset name.")
+                self, "预设已存在", "请选择其他预设名称。")
             return
         collage_presets.rename(old_name, new_name)
         self._refresh_collage_presets(new_name)
@@ -2386,7 +2403,7 @@ class InspectorDock(QWidget):
         if not name:
             return
         answer = QMessageBox.question(
-            self, "Delete Collage Preset", f"Delete the preset “{name}”?")
+            self, "删除拼贴预设", f"Delete the preset “{name}”?")
         if answer != QMessageBox.StandardButton.Yes:
             return
         import collage_presets
@@ -2452,27 +2469,27 @@ class InspectorDock(QWidget):
 
     def _on_reset_defaults(self):
         bubble_defaults.reset()
-        self._flash_button(self._reset_default_btn, "Reset ✓")
+        self._flash_button(self._reset_default_btn, "重置 ✓")
 
     def _build_dual_section(self):
-        section = AccordionSection("DUAL MODE")
+        section = AccordionSection("双格模式")
         self._dual_section = section
         self._dual_gap_slider = self._slider_row(
-            section.body_lay, "Gap", 0, 60, 4, " px", self._on_dual_gap,
-            tooltip="Gap between left and right panels in pixels"
+            section.body_lay, "间隙", 0, 60, 4, " px", self._on_dual_gap,
+            tooltip="左右分格之间的间隙（像素）"
         )
         self._dual_feather_slider = self._slider_row(
-            section.body_lay, "Feather", 0, 40, 0, " px", self._on_dual_feather,
+            section.body_lay, "羽化", 0, 40, 0, " px", self._on_dual_feather,
             tooltip="Feather/blend amount at the divider edge"
         )
         row = QHBoxLayout()
-        self._chk_dual_border = QCheckBox("Divider")
-        self._chk_dual_border.setToolTip("Show a divider line between panels")
+        self._chk_dual_border = QCheckBox("分隔线")
+        self._chk_dual_border.setToolTip("在分格之间显示分隔线")
         self._chk_dual_border.toggled.connect(self._on_dual_border_toggle)
         row.addWidget(self._chk_dual_border)
         self._btn_dual_border_color = QPushButton()
         self._btn_dual_border_color.setFixedSize(34, 28)
-        self._btn_dual_border_color.setToolTip("Divider color")
+        self._btn_dual_border_color.setToolTip("分隔线颜色")
         _set_btn_color(self._btn_dual_border_color, self._dual_border_color_val)
         self._btn_dual_border_color.clicked.connect(self._on_dual_border_color)
         row.addWidget(self._btn_dual_border_color)
@@ -2480,7 +2497,7 @@ class InspectorDock(QWidget):
         self._dual_border_width.setRange(0.0, 8.0)
         self._dual_border_width.setSingleStep(0.5)
         self._dual_border_width.setSuffix(" px")
-        self._dual_border_width.setToolTip("Divider width in pixels")
+        self._dual_border_width.setToolTip("分隔线宽度（像素）")
         self._dual_border_width.valueChanged.connect(self._on_dual_border_width)
         row.addWidget(self._dual_border_width)
         section.body_lay.addLayout(row)
@@ -2501,7 +2518,7 @@ class InspectorDock(QWidget):
         self._font_combo.setEditable(True)
         self._font_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self._font_combo.setFixedHeight(32)
-        self._font_combo.setToolTip("Font family")
+        self._font_combo.setToolTip("字体族")
         families = sorted(QFontDatabase.families(), key=str.casefold)
         self._font_combo.addItems(families)
         self._font_combo.currentTextChanged.connect(self._on_font_family_name)
@@ -2687,41 +2704,41 @@ class InspectorDock(QWidget):
         comic = bool(self._scene and self._scene.is_manga_mode())
         page_mode = collage or comic
         self._tabs.setTabText(self.SHAPE_TAB,
-                              "Collage" if collage else "Comic" if comic else "Shape")
-        self._tabs.setTabText(self.TEXT_TAB, "Text")
-        self._tabs.setTabText(self.FX_TAB, "Selected FX" if page_mode else "FX")
-        self._tabs.setTabText(self.LAYERS_TAB, "Layers")
+                              "拼贴" if collage else "Comic" if comic else "形状")
+        self._tabs.setTabText(self.TEXT_TAB, "文字")
+        self._tabs.setTabText(self.FX_TAB, "所选效果" if page_mode else "FX")
+        self._tabs.setTabText(self.LAYERS_TAB, "图层")
         self._tabs.setTabVisible(self.TEXT_TAB, not page_mode)
         if collage:
-            self._shape_intro_title.setText("Photo collage")
+            self._shape_intro_title.setText("照片拼贴")
             self._shape_intro_text.setText(
-                "Choose the frame layout, spacing, colors, and finish.")
+                "选择画框布局、间距、颜色和完成效果。")
         elif comic:
-            self._shape_intro_title.setText("Comic page")
+            self._shape_intro_title.setText("漫画页面")
             self._shape_intro_text.setText(
-                "Shape the page rhythm, panels, gutters, and paper.")
+                "调整页面节奏、分格、间距和纸张。")
         else:
-            self._shape_intro_title.setText("Shape")
+            self._shape_intro_title.setText("形状")
             self._shape_intro_text.setText(
-                "Choose the bubble form, fill, border, and tail.")
-        self._fx_intro_title.setText("Selected effects" if page_mode else "Effects")
+                "选择气泡的形状、填充、边框和尾巴。")
+        self._fx_intro_title.setText("所选效果" if page_mode else "效果")
         self._fx_intro_text.setText(
-            "Edit effects attached to the active frame."
+            "编辑附加到当前画框的效果。"
             if page_mode else
-            "Add shadows, expression marks, photos, and motion effects.")
+            "添加阴影、表情符号、照片和动效。")
 
     def _configure_tabs_for_object(self):
-        self._tabs.setTabText(self.SHAPE_TAB, "Shape")
-        self._tabs.setTabText(self.TEXT_TAB, "Text")
+        self._tabs.setTabText(self.SHAPE_TAB, "形状")
+        self._tabs.setTabText(self.TEXT_TAB, "文字")
         self._tabs.setTabText(self.FX_TAB, "FX")
-        self._tabs.setTabText(self.LAYERS_TAB, "Layers")
+        self._tabs.setTabText(self.LAYERS_TAB, "图层")
         self._tabs.setTabVisible(self.TEXT_TAB, True)
-        self._shape_intro_title.setText("Shape")
+        self._shape_intro_title.setText("形状")
         self._shape_intro_text.setText(
-            "Choose the bubble form, fill, border, and tail.")
-        self._fx_intro_title.setText("Effects")
+            "选择气泡的形状、填充、边框和尾巴。")
+        self._fx_intro_title.setText("效果")
         self._fx_intro_text.setText(
-            "Add shadows, expression marks, photos, and motion effects.")
+            "添加阴影、表情符号、照片和动效。")
 
     # ------------------------------------------------------------------
     # Public update API
@@ -2767,7 +2784,7 @@ class InspectorDock(QWidget):
                 self._h_spacing.setValue(int(bubble.get_letter_spacing()))
             for key, btn in self._style_btns.items():
                 btn.setChecked(key == style)
-                btn.setToolTip(f"Change selected bubble to {STYLE_LABELS[key]}")
+                btn.setToolTip(f"将选中气泡切换到 {STYLE_LABELS[key]}")
             self._set_color(self._fill_btn, self._fill_hex, bubble.get_fill_color())
             self._set_color(self._stroke_btn, self._stroke_hex, bubble.get_border_color())
             self._bubble_opacity.setValue(round(bubble.get_fill_color().alpha() * 100 / 255))
@@ -2780,13 +2797,13 @@ class InspectorDock(QWidget):
             self._check_font_tile(font.family())
             self._font_size.setValue(max(6, font.pointSize()))
             if font.bold() and font.italic():
-                self._weight_combo.setCurrentText("Bold Italic")
+                self._weight_combo.setCurrentText("粗斜体")
             elif font.bold():
-                self._weight_combo.setCurrentText("Bold")
+                self._weight_combo.setCurrentText("粗体")
             elif font.italic():
-                self._weight_combo.setCurrentText("Italic")
+                self._weight_combo.setCurrentText("斜体")
             else:
-                self._weight_combo.setCurrentText("Regular")
+                self._weight_combo.setCurrentText("常规")
             self._set_color(self._text_color_btn, None, bubble.get_text_color())
             alignment = bubble.get_text_alignment()
             if alignment in self._align_btns:
@@ -2918,7 +2935,7 @@ class InspectorDock(QWidget):
                 else:
                     self._manga_panel_count.setCurrentText(str(count))
                 composition = str(layout["composition"])
-                if composition == "Random":
+                if composition == "随机":
                     self._manga_composition.clearSelection()
                 else:
                     self._manga_composition.setCurrentText(composition)
@@ -2930,10 +2947,10 @@ class InspectorDock(QWidget):
                     str(layout["reading_direction"]))
                 self._manga_numbers.setChecked(bool(layout["show_numbers"]))
                 quick = {
-                    (0, "Random"): "mixed",
-                    (6, "Balanced"): "classic",
-                    (4, "Feature"): "focus",
-                    (8, "Action"): "action",
+                    (0, "随机"): "mixed",
+                    (6, "均衡"): "classic",
+                    (4, "突出"): "focus",
+                    (8, "动作"): "action",
                 }.get((count, str(layout["composition"])))
                 if quick:
                     self._comic_quick_preset.setCurrentText(quick)
@@ -3040,7 +3057,7 @@ class InspectorDock(QWidget):
             btn.setEnabled(can_add)
             btn.setChecked(False)
         for key, btn in self._style_btns.items():
-            btn.setToolTip(f"Add {STYLE_LABELS[key]}")
+            btn.setToolTip(f"添加 {STYLE_LABELS[key]}")
         if self._font_combo is not None:
             self._font_combo.setEnabled(False)
         self._layer_section.setEnabled(False)
@@ -3186,8 +3203,8 @@ class InspectorDock(QWidget):
             old = self._bubble.get_font()
             new = QFont(old)
             value = self._weight_combo.currentText()
-            new.setBold("Bold" in value)
-            new.setItalic("Italic" in value)
+            new.setBold("粗体" in value)
+            new.setItalic("斜体" in value)
             self._undo_stack.push(FontChangeCommand(self._bubble, old, new))
 
     def _on_text_color(self):
@@ -3288,10 +3305,10 @@ class InspectorDock(QWidget):
         k = self._outline_scale()      # bubble size relative to the default
         presets = {
             "None":  {"enabled": False},
-            "Soft":  {"enabled": True, "color": QColor(0, 0, 0),
+            "柔和":  {"enabled": True, "color": QColor(0, 0, 0),
                       "blur": round(16 * k), "offset_x": round(7 * k),
                       "offset_y": round(8 * k), "opacity": 55},
-            "Solid": {"enabled": True, "color": QColor(0, 0, 0),
+            "实心": {"enabled": True, "color": QColor(0, 0, 0),
                       "blur": 0, "offset_x": round(9 * k),
                       "offset_y": round(10 * k), "opacity": 100},
         }
@@ -3354,9 +3371,9 @@ class InspectorDock(QWidget):
         if not shadow.get("enabled"):
             name = "None"
         elif int(shadow.get("blur", 0)) <= 2:
-            name = "Solid"
+            name = "实心"
         else:
-            name = "Soft"
+            name = "柔和"
         for btn in self._shadow_preset_btns:
             btn.setChecked(btn.text() == name)
 
@@ -3405,20 +3422,20 @@ class InspectorDock(QWidget):
                 # An empty bubble has no lines at all — indexing [0] crashed.
                 lines = item.get_text().splitlines()
                 label = (lines[0][:28] if lines else "") or "empty"
-                items.append((item.zValue(), item, f"Bubble — {label}"))
+                items.append((item.zValue(), item, f"气泡 — {label}"))
             elif isinstance(item, RedactionItem):
-                name = "Pixelate" if item.get_mode() == "pixelate" else "Blur"
+                name = "像素化" if item.get_mode() == "pixelate" else "模糊"
                 frame = getattr(item, "_page_panel_index", None)
                 label = (f"Frame {frame + 1} · {name}"
                          if frame is not None else f"{name} box")
                 items.append((item.zValue(), item, label))
             elif isinstance(item, SpeedLinesItem):
                 frame = getattr(item, "_page_panel_index", None)
-                label = (f"Frame {frame + 1} · Lines"
-                         if frame is not None else "Speed lines")
+                label = (f"Frame {frame + 1} · 线条"
+                         if frame is not None else "速度线")
                 items.append((item.zValue(), item, label))
             elif isinstance(item, MediaItem) and getattr(item, "_is_overlay", False):
-                items.append((item.zValue(), item, "Image layer"))
+                items.append((item.zValue(), item, "图片图层"))
         for _z, item, label in sorted(items, key=lambda row: row[0], reverse=True):
             list_item = QListWidgetItem(label)
             list_item.setFlags(
@@ -3541,7 +3558,7 @@ class InspectorDock(QWidget):
 
     def _on_dual_border_color(self):
         color = QColorDialog.getColor(
-            self._dual_border_color_val, self, "Divider Color"
+            self._dual_border_color_val, self, "分隔线颜色"
         )
         if color.isValid():
             self._dual_border_color_val = color

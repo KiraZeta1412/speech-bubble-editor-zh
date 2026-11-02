@@ -265,14 +265,14 @@ class RedactionItem(QGraphicsItem):
 
     def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent):
         menu = QMenu()
-        act_blur  = menu.addAction("Blur mode")
-        act_pix   = menu.addAction("Pixelate mode")
+        act_blur  = menu.addAction("模糊模式")
+        act_pix   = menu.addAction("像素化模式")
         for act, m in ((act_blur, "blur"), (act_pix, "pixelate")):
             act.setCheckable(True)
             act.setChecked(self._mode == m)
         menu.addSeparator()
-        act_dup = menu.addAction("Duplicate")
-        act_del = menu.addAction("Delete")
+        act_dup = menu.addAction("创建副本")
+        act_del = menu.addAction("删除")
         chosen = menu.exec(event.screenPos())
         if   chosen == act_blur: self.set_mode("blur")
         elif chosen == act_pix:  self.set_mode("pixelate")

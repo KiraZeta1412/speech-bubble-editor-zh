@@ -2,7 +2,7 @@
 undo_commands.py — QUndoCommand subclasses for the undo/redo stack.
 
 Commands implemented:
-  AddBubbleCommand     — redo = add item,    undo = remove item
+  添加BubbleCommand     — redo = add item,    undo = remove item
   DeleteBubbleCommand  — redo = remove item, undo = add item back
   MoveBubbleCommand    — redo = move to new_pos, undo = move to old_pos
                          (consecutive moves of the same bubble are merged)
@@ -21,7 +21,7 @@ Commands implemented:
   ZValueChangeCommand — redo = new z, undo = old z
   MoveMediaCommand     — redo = move media to new_pos, undo = move to old_pos
   ResizeMediaCommand   — redo = resize + reposition, undo = restore original
-  AddOverlayCommand    — redo = add overlay layer, undo = remove it
+  添加OverlayCommand    — redo = add overlay layer, undo = remove it
   RemoveOverlayCommand — redo = remove overlay layer, undo = add it back
 """
 
@@ -41,7 +41,7 @@ from constants import (
 
 class AddBubbleCommand(QUndoCommand):
     def __init__(self, scene, bubble):
-        super().__init__("Add Bubble")
+        super().__init__("添加气泡")
         self._scene  = scene
         self._bubble = bubble
         self._z      = None   # assigned on first redo, reused on later redos
@@ -65,7 +65,7 @@ class ReorderPanelImagesCommand(QUndoCommand):
     """Move to an empty frame or swap two filled page frames."""
 
     def __init__(self, source, target, source_state, target_state):
-        super().__init__("Reorder Page Images")
+        super().__init__("重新排列页面图片")
         self._source = source
         self._target = target
         self._source_state = source_state
@@ -82,7 +82,7 @@ class ReorderPanelImagesCommand(QUndoCommand):
 
 class DeleteBubbleCommand(QUndoCommand):
     def __init__(self, scene, bubble):
-        super().__init__("Delete Bubble")
+        super().__init__("删除气泡")
         self._scene  = scene
         self._bubble = bubble
 
@@ -100,7 +100,7 @@ class MoveBubbleCommand(QUndoCommand):
     _ID = MERGE_ID_MOVE_BUBBLE
 
     def __init__(self, bubble, old_pos: QPointF, new_pos: QPointF):
-        super().__init__("Move Bubble")
+        super().__init__("移动气泡")
         self._bubble  = bubble
         self._old_pos = QPointF(old_pos)
         self._new_pos = QPointF(new_pos)
@@ -125,7 +125,7 @@ class MoveBubbleCommand(QUndoCommand):
 class ResizeBubbleCommand(QUndoCommand):
     def __init__(self, bubble, old_rect: QRectF, new_rect: QRectF,
                  old_font_pt: int | None = None, new_font_pt: int | None = None):
-        super().__init__("Resize Bubble")
+        super().__init__("调整气泡大小")
         self._bubble   = bubble
         self._old_rect = QRectF(old_rect)
         self._new_rect = QRectF(new_rect)
@@ -149,7 +149,7 @@ class ResizeBubbleCommand(QUndoCommand):
 
 class TextChangeCommand(QUndoCommand):
     def __init__(self, bubble, old_text: str, new_text: str):
-        super().__init__("Edit Text")
+        super().__init__("编辑文字")
         self._bubble   = bubble
         self._old_text = old_text
         self._new_text = new_text
@@ -166,7 +166,7 @@ class MoveMediaCommand(QUndoCommand):
     _ID = MERGE_ID_MOVE_MEDIA
 
     def __init__(self, scene, item, old_pos: QPointF, new_pos: QPointF):
-        super().__init__("Move Media")
+        super().__init__("移动媒体")
         self._scene   = scene
         self._item    = item
         self._old_pos = QPointF(old_pos)
@@ -198,7 +198,7 @@ class ResizeMediaCommand(QUndoCommand):
     def __init__(self, scene, item,
                  old_pos: QPointF, old_w: float, old_h: float,
                  new_pos: QPointF, new_w: float, new_h: float):
-        super().__init__("Resize Media")
+        super().__init__("调整媒体大小")
         self._scene = scene
         self._item  = item
         self._old_pos = QPointF(old_pos)
@@ -223,7 +223,7 @@ class AddOverlayCommand(QUndoCommand):
     """Undo/redo for adding an overlay layer to the scene."""
 
     def __init__(self, scene, item):
-        super().__init__("Add Layer")
+        super().__init__("添加图层")
         self._scene = scene
         self._item  = item
 
@@ -248,7 +248,7 @@ class RemoveOverlayCommand(QUndoCommand):
     """Undo/redo for removing an overlay layer from the scene."""
 
     def __init__(self, scene, item):
-        super().__init__("Remove Layer")
+        super().__init__("删除图层")
         self._scene = scene
         self._item  = item
 
@@ -278,7 +278,7 @@ class StyleChangeCommand(QUndoCommand):
     _ID = MERGE_ID_STYLE
 
     def __init__(self, bubble, old_style: str, new_style: str):
-        super().__init__("Change Style")
+        super().__init__("更换样式")
         self._bubble    = bubble
         self._old_style = old_style
         self._new_style = new_style
@@ -304,7 +304,7 @@ class FontChangeCommand(QUndoCommand):
     _ID = MERGE_ID_FONT
 
     def __init__(self, bubble, old_font: QFont, new_font: QFont):
-        super().__init__("Change Font")
+        super().__init__("更换字体")
         self._bubble   = bubble
         self._old_font = QFont(old_font)
         self._new_font = QFont(new_font)
@@ -330,7 +330,7 @@ class FillColorChangeCommand(QUndoCommand):
     _ID = MERGE_ID_FILL_COLOR
 
     def __init__(self, bubble, old_color: QColor, new_color: QColor):
-        super().__init__("Change Fill Color")
+        super().__init__("更换填充颜色")
         self._bubble    = bubble
         self._old_color = QColor(old_color)
         self._new_color = QColor(new_color)
@@ -356,7 +356,7 @@ class BorderColorChangeCommand(QUndoCommand):
     _ID = MERGE_ID_BORDER_COLOR
 
     def __init__(self, bubble, old_color: QColor, new_color: QColor):
-        super().__init__("Change Border Color")
+        super().__init__("更换边框颜色")
         self._bubble    = bubble
         self._old_color = QColor(old_color)
         self._new_color = QColor(new_color)
@@ -382,7 +382,7 @@ class BorderWidthChangeCommand(QUndoCommand):
     _ID = MERGE_ID_BORDER_WIDTH
 
     def __init__(self, bubble, old_width: float, new_width: float):
-        super().__init__("Change Border Width")
+        super().__init__("更换边框宽度")
         self._bubble    = bubble
         self._old_width = old_width
         self._new_width = new_width
@@ -408,7 +408,7 @@ class TextColorChangeCommand(QUndoCommand):
     _ID = MERGE_ID_TEXT_COLOR
 
     def __init__(self, bubble, old_color: QColor, new_color: QColor):
-        super().__init__("Change Text Color")
+        super().__init__("更换文字颜色")
         self._bubble    = bubble
         self._old_color = QColor(old_color)
         self._new_color = QColor(new_color)
@@ -434,7 +434,7 @@ class TextAlignmentChangeCommand(QUndoCommand):
     _ID = MERGE_ID_TEXT_ALIGNMENT
 
     def __init__(self, bubble, old_alignment: int, new_alignment: int):
-        super().__init__("Change Text Alignment")
+        super().__init__("更换文字对齐")
         self._bubble = bubble
         self._old_alignment = old_alignment
         self._new_alignment = new_alignment
@@ -460,7 +460,7 @@ class TailPositionChangeCommand(QUndoCommand):
     _ID = MERGE_ID_TAIL_POSITION
 
     def __init__(self, bubble, old_position: str, new_position: str):
-        super().__init__("Change Tail Position")
+        super().__init__("更换尾巴位置")
         self._bubble = bubble
         self._old_position = old_position
         self._new_position = new_position
@@ -486,7 +486,7 @@ class TailWidthChangeCommand(QUndoCommand):
     _ID = MERGE_ID_TAIL_WIDTH
 
     def __init__(self, bubble, old_width: int, new_width: int):
-        super().__init__("Change Tail Width")
+        super().__init__("更换尾巴宽度")
         self._bubble = bubble
         self._old_width = old_width
         self._new_width = new_width
@@ -511,7 +511,7 @@ class LobeTextChangeCommand(QUndoCommand):
     """Undo/redo for editing one lobe of a twin/triple balloon."""
 
     def __init__(self, bubble, index: int, old_text: str, new_text: str):
-        super().__init__("Edit Lobe Text")
+        super().__init__("编辑气泡瓣文字")
         self._bubble = bubble
         self._index = index
         self._old = old_text
@@ -529,7 +529,7 @@ class InsetPhotoCommand(QUndoCommand):
     _ID = MERGE_ID_INSET_PHOTO
 
     def __init__(self, bubble, old_state: dict, new_state: dict):
-        super().__init__("Change Bubble Photo")
+        super().__init__("更换气泡照片")
         self._bubble = bubble
         self._old = dict(old_state)
         self._new = dict(new_state)
@@ -571,7 +571,7 @@ class RotatePhotoCommand(QUndoCommand):
     """
 
     def __init__(self, scene, turns: int):
-        super().__init__("Rotate Photo")
+        super().__init__("旋转照片")
         self._scene = scene
         self._turns = turns % 4
         self._saved = None   # item positions before the first rotation
@@ -595,7 +595,7 @@ class CropPhotoCommand(QUndoCommand):
     """Undo/redo for cropping the base photo (keeps a copy of the original)."""
 
     def __init__(self, scene, rect: QRect):
-        super().__init__("Crop Photo")
+        super().__init__("裁剪照片")
         self._scene = scene
         self._rect = QRect(rect)
         self._original = QPixmap(scene.photo_pixmap)
@@ -612,7 +612,7 @@ class TailShapeChangeCommand(QUndoCommand):
     _ID = MERGE_ID_TAIL_SHAPE
 
     def __init__(self, bubble, old_shape: str, new_shape: str):
-        super().__init__("Change Tail Shape")
+        super().__init__("更换尾巴形状")
         self._bubble = bubble
         self._old_shape = old_shape
         self._new_shape = new_shape
@@ -638,7 +638,7 @@ class TailCountChangeCommand(QUndoCommand):
     _ID = MERGE_ID_TAIL_COUNT
 
     def __init__(self, bubble, old_count: int, new_count: int):
-        super().__init__("Change Tail Count")
+        super().__init__("更换尾巴数量")
         self._bubble = bubble
         self._old_count = old_count
         self._new_count = new_count
@@ -665,7 +665,7 @@ class TextOutlineChangeCommand(QUndoCommand):
 
     def __init__(self, bubble, old_color: QColor, old_width: float,
                  new_color: QColor, new_width: float):
-        super().__init__("Change Text Outline")
+        super().__init__("更换文字描边")
         self._bubble = bubble
         self._old = (QColor(old_color), float(old_width))
         self._new = (QColor(new_color), float(new_width))
@@ -691,7 +691,7 @@ class ShadowChangeCommand(QUndoCommand):
     _ID = MERGE_ID_SHADOW
 
     def __init__(self, bubble, old_shadow: dict, new_shadow: dict):
-        super().__init__("Change Shadow")
+        super().__init__("更换阴影")
         self._bubble = bubble
         self._old_shadow = dict(old_shadow)
         self._new_shadow = dict(new_shadow)
@@ -717,7 +717,7 @@ class ZValueChangeCommand(QUndoCommand):
     _ID = MERGE_ID_Z_VALUE
 
     def __init__(self, item, old_z: float, new_z: float):
-        super().__init__("Change Layer Order")
+        super().__init__("更改图层顺序")
         self._item = item
         self._old_z = old_z
         self._new_z = new_z

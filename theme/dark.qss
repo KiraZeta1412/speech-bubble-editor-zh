@@ -15,7 +15,9 @@
 QWidget {
     background-color: #171615;
     color: #f0ece8;
-    font-family: "Inter";
+    /* 汉化版：Inter 没有中文字形，补一个随包分发的中文字体作回退，
+       这样在没有装中文字体的 Windows 上也能正常显示中文界面。 */
+    font-family: "Inter", "Noto Sans SC";
     font-size: 12px;
 }
 

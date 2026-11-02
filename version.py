@@ -18,7 +18,7 @@ History:
              step frame / first / last frame controls; time label shows
              trim selection range; reverse playback live in GUI (not just
              export); meme bar position fixed after resize; dual mode right
-             pane layout fixed (placeholder tracked through all moves).
+             pane布局 fixed (placeholder tracked through all moves).
   v3.0.0 — Single instance enforcement; macOS support; overlay layers
             (add photo/video as freely-positioned layer, z-order controls,
             undo/redo); dual mode seam settings (gap, border, feather) in
@@ -53,8 +53,8 @@ History:
             not just the width, so a tall bubble no longer leaves the text tiny
             at the top. Instagram default text style + bundled Inter font,
             blur/pixelate redaction layers, Camtasia-style block text fit, and a
-            full-resolution dual-export layout fix.
-  v4.5.0 — Comic and Photo Collage page editors, visual layout generation,
+            full-resolution dual-export布局 fix.
+  v4.5.0 — Comic and Photo Collage page editors, visual布局 generation,
             magnetic photo reordering, frame-aware effects, named collage
             presets, bidirectional image scaling, and unified page inspectors.
   v4.5.1 — Responsive editor polish, stable selection layout and low-resolution
@@ -63,6 +63,6 @@ History:
 """
 
 __version__  = "4.5.2"
-__app_name__ = "Speech Bubble Editor"
+__app_name__ = "漫画气泡编辑器"
 __org_name__ = "Long Weekend Labs"
 __copyright__ = "© 2026 Long Weekend Labs"

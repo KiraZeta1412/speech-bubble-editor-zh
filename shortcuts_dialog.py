@@ -12,43 +12,43 @@ from PyQt6.QtCore import Qt
 
 SHORTCUT_GROUPS = [
     (
-        "Project",
+        "项目",
         [
-            ("Open media", "Ctrl+O"),
-            ("Export", "Ctrl+E"),
-            ("Reset project", "Ctrl+N"),
-            ("Show keyboard shortcuts", "Ctrl+/"),
+            ("打开媒体", "Ctrl+O"),
+            ("导出", "Ctrl+E"),
+            ("重置项目", "Ctrl+N"),
+            ("显示键盘快捷键", "Ctrl+/"),
         ],
     ),
     (
-        "Editing",
+        "编辑",
         [
-            ("Undo", "Ctrl+Z"),
-            ("Redo", "Ctrl+Y or Ctrl+Shift+Z"),
-            ("Add speech bubble", "Ctrl+B"),
-            ("Add text", "T"),
-            ("Add image or video layer", "Ctrl+L"),
-            ("Delete selected item", "Delete"),
+            ("撤销", "Ctrl+Z"),
+            ("重做", "Ctrl+Y 或 Ctrl+Shift+Z"),
+            ("添加对话气泡", "Ctrl+B"),
+            ("添加文字", "T"),
+            ("添加图片或视频图层", "Ctrl+L"),
+            ("删除选中项", "删除"),
         ],
     ),
     (
-        "Tools",
+        "工具",
         [
-            ("Select tool", "V"),
-            ("Move tool", "M"),
+            ("选择工具", "V"),
+            ("移动工具", "M"),
         ],
     ),
     (
-        "Video",
+        "视频",
         [
-            ("Play or pause", "Space"),
-            ("Step back one frame", "Left Arrow"),
-            ("Step forward one frame", "Right Arrow"),
-            ("Go to first frame", "Home"),
-            ("Go to last frame", "End"),
-            ("Set trim in", "["),
-            ("Set trim out", "]"),
-            ("Toggle fullscreen window", "F"),
+            ("播放或暂停", "空格键"),
+            ("后退一帧", "左方向键"),
+            ("前进一帧", "右方向键"),
+            ("跳到第一帧", "Home"),
+            ("跳到最后一帧", "End"),
+            ("设置入点", "["),
+            ("设置出点", "]"),
+            ("切换全屏窗口", "F"),
         ],
     ),
 ]
@@ -58,7 +58,7 @@ class ShortcutsDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Keyboard Shortcuts")
+        self.setWindowTitle("键盘快捷键")
         self.setFixedWidth(640)
         self.setModal(True)
         self._build()
@@ -68,7 +68,7 @@ class ShortcutsDialog(QDialog):
         layout.setContentsMargins(24, 22, 24, 20)
         layout.setSpacing(14)
 
-        title = QLabel("Keyboard Shortcuts")
+        title = QLabel("键盘快捷键")
         font = QFont()
         font.setPointSize(18)
         font.setBold(True)
@@ -76,7 +76,7 @@ class ShortcutsDialog(QDialog):
         title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(title)
 
-        subtitle = QLabel("Quick actions available while editing.")
+        subtitle = QLabel("编辑时可用的快捷操作。")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         subtitle.setStyleSheet("color: #9a9a9a; font-size: 11px;")
         layout.addWidget(subtitle)
@@ -97,9 +97,9 @@ class ShortcutsDialog(QDialog):
             )
         layout.addLayout(groups)
 
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton("关闭")
         close_btn.setFixedWidth(100)
-        close_btn.setToolTip("Close keyboard shortcuts")
+        close_btn.setToolTip("关闭键盘快捷键")
         close_btn.clicked.connect(self.accept)
 
         h = QHBoxLayout()
