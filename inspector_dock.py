@@ -24,6 +24,7 @@ from PyQt6.QtGui import (QColor, QFont, QFontDatabase, QPainter, QPainterPath,
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPointF, QRectF
 
 import bubble_defaults
+import collage_maker
 import i18n
 from bubble import BubbleItem, TEXT_PRESETS, TAIL_SHAPES
 from media_item import MediaItem
@@ -185,20 +186,59 @@ class PhotoCountStepper(QWidget):
 
 
 class CollageTemplateButton(QToolButton):
-    """A template thumbnail that communicates geometry without terminology."""
+    """布局缩略图：直接跑布局引擎，把算出来的矩形按比例画进去。
+
+    这样新增任何布局都自动拥有正确的预览图，不用再为每种布局手写绘制分支。
+    """
 
     def __init__(self, layout_type: str, label: str, parent=None):
         super().__init__(parent)
         self.layout_type = layout_type
         self.label = label
         self._vertical = True
+        self._count = 4
+        self._aspect = "方形 · 1:1"
+        self._rects: list[QRectF] = []
         self.setCheckable(True)
-        self.setFixedSize(62, 70)
-        self.setToolTip(f"使用{label.lower()}布局")
+        self.setFixedSize(56, 64)
+        self.setToolTip(f"使用「{label}」布局")
+        self._refresh_rects()
+
+    # ---- 上下文 --------------------------------------------------------
 
     def set_vertical(self, vertical: bool):
         self._vertical = bool(vertical)
+        self._refresh_rects()
+
+    def set_context(self, count: int, aspect: str, vertical: bool = True):
+        """照片数量和页面比例变了，缩略图要跟着重算。"""
+        self._count = max(2, int(count))
+        self._aspect = str(aspect)
+        self._vertical = bool(vertical)
+        self._refresh_rects()
+
+    def _refresh_rects(self):
+        try:
+            self._rects = collage_maker.layout_rects(
+                self._count, self.layout_type, self._aspect, margin=26, gap=16)
+        except Exception:
+            self._rects = []
         self.update()
+
+    # ---- 绘制 ----------------------------------------------------------
+
+    def _page_rect(self) -> QRectF:
+        """在按钮里按页面真实比例摆一个缩略页面。"""
+        page_w, page_h = collage_maker.page_size(self._aspect)
+        avail_w = max(10.0, self.width() - 12.0)
+        avail_h = max(10.0, self.height() - 22.0)
+        if page_w / page_h >= avail_w / avail_h:
+            w = avail_w
+            h = w * page_h / page_w
+        else:
+            h = avail_h
+            w = h * page_w / page_h
+        return QRectF((self.width() - w) / 2, 6 + (avail_h - h) / 2, w, h)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -211,54 +251,32 @@ class CollageTemplateButton(QToolButton):
         painter.setBrush(QColor(255, 122, 69, 28) if selected else QColor("#1c2938"))
         painter.drawRoundedRect(QRectF(1, 1, self.width() - 2, self.height() - 2), 6, 6)
 
-        if self._vertical:
-            page = QRectF(18, 7, 26, 42)
-        else:
-            page = QRectF(9, 12, 44, 32)
-        painter.setPen(QPen(QColor("#65758b"), 1))
-        painter.setBrush(QColor("#0b1119"))
-        painter.drawRect(page)
-        gap = 2.0
-        fill = QColor("#dbe5f0") if selected else QColor("#8190a4")
+        page = self._page_rect()
+        page_w, page_h = collage_maker.page_size(self._aspect)
+        sx = page.width() / max(1.0, page_w)
+        sy = page.height() / max(1.0, page_h)
+
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(fill)
-        x, y, w, h = page.x() + 2, page.y() + 2, page.width() - 4, page.height() - 4
-        if self.layout_type == "网格":
-            painter.drawRect(QRectF(x, y, (w-gap)/2, (h-gap)/2))
-            painter.drawRect(QRectF(x+(w+gap)/2, y, (w-gap)/2, (h-gap)/2))
-            painter.drawRect(QRectF(x, y+(h+gap)/2, (w-gap)/2, (h-gap)/2))
-            painter.drawRect(QRectF(x+(w+gap)/2, y+(h+gap)/2, (w-gap)/2, (h-gap)/2))
-        elif self.layout_type == "马赛克":
-            painter.drawRect(QRectF(x, y, w*0.58-gap/2, h))
-            painter.drawRect(QRectF(x+w*0.58+gap/2, y, w*0.42-gap/2, (h-gap)/2))
-            painter.drawRect(QRectF(x+w*0.58+gap/2, y+(h+gap)/2,
-                                    w*0.42-gap/2, (h-gap)/2))
-        elif self.layout_type == "主图":
-            painter.drawRect(QRectF(x, y, w, h*0.58-gap/2))
-            third = (w-gap*2)/3
-            for index in range(3):
-                painter.drawRect(QRectF(x+index*(third+gap), y+h*0.58+gap/2,
-                                        third, h*0.42-gap/2))
-        else:
-            if self._vertical:
-                cell = (h-gap*2)/3
-                for index in range(3):
-                    painter.drawRect(QRectF(x, y+index*(cell+gap), w, cell))
-            else:
-                cell = (w-gap*2)/3
-                for index in range(3):
-                    painter.drawRect(QRectF(x+index*(cell+gap), y, cell, h))
+        painter.setBrush(QColor("#dbe5f0") if selected else QColor("#8190a4"))
+        for rect in self._rects:
+            painter.drawRect(QRectF(page.x() + rect.x() * sx,
+                                    page.y() + rect.y() * sy,
+                                    max(1.0, rect.width() * sx),
+                                    max(1.0, rect.height() * sy)))
 
         painter.setPen(QColor("#ff9a70") if selected else QColor("#acb9c8"))
         font = painter.font()
         font.setPixelSize(10)
         font.setBold(selected)
         painter.setFont(font)
-        painter.drawText(QRectF(2, 51, self.width()-4, 16),
+        painter.drawText(QRectF(2, self.height() - 15, self.width() - 4, 14),
                          int(Qt.AlignmentFlag.AlignCenter), i18n.tr(self.label))
 
 
 class CollageTemplateStrip(QWidget):
+    """布局画廊：可滚动的缩略图网格，横向 4 列。"""
+
+    COLUMNS = 4
     currentTextChanged = pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -267,18 +285,33 @@ class CollageTemplateStrip(QWidget):
         self._buttons = {}
         self._group = QButtonGroup(self)
         self._group.setExclusive(True)
-        row = QHBoxLayout(self)
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(5)
-        for layout_type, label in (("网格", "网格"), ("马赛克", "马赛克"),
-                                   ("主图", "主图"), ("胶片条", "条带")):
-            btn = CollageTemplateButton(layout_type, label)
-            self._buttons[layout_type] = btn
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setFixedHeight(146)
+
+        inner = QWidget()
+        grid = QGridLayout(inner)
+        grid.setContentsMargins(0, 0, 4, 0)
+        grid.setSpacing(4)
+        names = [n for n in collage_maker.LAYOUT_TYPES if n != "自动"]
+        for index, name in enumerate(names):
+            label = collage_maker.LAYOUT_LABELS.get(name, name)
+            btn = CollageTemplateButton(name, label)
+            self._buttons[name] = btn
             self._group.addButton(btn)
-            row.addWidget(btn)
+            grid.addWidget(btn, index // self.COLUMNS, index % self.COLUMNS)
             btn.clicked.connect(
-                lambda checked, value=layout_type:
-                checked and self._select(value))
+                lambda checked, value=name: checked and self._select(value))
+        grid.setRowStretch(grid.rowCount(), 1)
+        scroll.setWidget(inner)
+        outer.addWidget(scroll)
         self.setCurrentText("马赛克")
 
     def _select(self, value):
@@ -298,6 +331,11 @@ class CollageTemplateStrip(QWidget):
     def set_vertical(self, vertical):
         for btn in self._buttons.values():
             btn.set_vertical(vertical)
+
+    def set_context(self, count: int, aspect: str, vertical: bool = True):
+        """把当前照片数量与页面比例传给每个缩略图。"""
+        for btn in self._buttons.values():
+            btn.set_context(count, aspect, vertical)
 
     def option_button(self, value):
         return self._buttons.get(str(value))
@@ -2355,6 +2393,20 @@ class InspectorDock(QWidget):
                         self._collage_count.setValue(actual)
                     finally:
                         self._updating = False
+                self._sync_collage_layout_context()
+
+    def _sync_collage_layout_context(self):
+        """把当前照片数与页面比例传给布局画廊 —— 缩略图要按真实参数算才对。"""
+        settings = {}
+        if self._scene is not None:
+            try:
+                settings = self._scene.collage_layout_settings()
+            except Exception:
+                settings = {}
+        count = int(settings.get("photo_count", 4))
+        aspect = str(settings.get("aspect_ratio", "方形 · 1:1"))
+        horizontal = aspect in ("横版 · 16:9", "照片 · 3:2")
+        self._collage_layout_type.set_context(count, aspect, not horizontal)
 
     COLLAGE_ASPECTS = ("竖版 · 4:5", "横版 · 16:9", "方形 · 1:1")
 
@@ -2388,6 +2440,7 @@ class InspectorDock(QWidget):
             # 不假装选中任何一个，避免界面说谎。
             self._collage_orientation.clearSelection()
         self._collage_layout_type.set_vertical(not horizontal)
+        self._sync_collage_layout_context()
 
     def _set_collage_style_option(self, key: str, value):
         if not self._updating and self._scene is not None:
