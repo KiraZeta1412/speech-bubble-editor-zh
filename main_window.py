@@ -131,7 +131,6 @@ class MainWindow(QMainWindow):
         sb.add_bubble_requested.connect(self._on_add_bubble_clicked)
         sb.add_text_requested.connect(lambda: self._on_add_bubble_with_style("text"))
         sb.add_redact_requested.connect(self._on_add_redaction)
-        sb.add_brush_requested.connect(self._on_add_brush)
         sb.add_layer_requested.connect(self._on_add_layer)
         sb.crop_requested.connect(self._on_crop)
         sb.rotate_requested.connect(self._on_rotate)
@@ -751,29 +750,6 @@ class MainWindow(QMainWindow):
             self.scene.set_active_page_panel(active_panel.index)
         self.props.update_for_redaction(item)
         self.ctx_toolbar.hide_toolbar()
-
-    def _on_add_brush(self):
-        """新增一块笔刷打码 —— 创建后直接进入涂抹模式，在画布上拖动即可刷。"""
-        if not self.scene.has_photo():
-            return
-        page_mode = self.scene.is_manga_mode() or self.scene.is_collage_mode()
-        active_panel = self.scene.active_page_panel() if page_mode else None
-        if page_mode and active_panel is None:
-            self.statusBar().showMessage(
-                "添加打码前请先选中一个漫画分格或拼贴画框")
-            return
-        frame = (active_panel.sceneBoundingRect() if active_panel is not None
-                 else self.scene.sceneRect())
-        c = frame.center()
-        style = getattr(self, "_last_redact_style", None) or STYLE_MOSAIC
-        item = self.controller.add_brush_redaction(c.x(), c.y(), mode=style)
-        if active_panel is not None:
-            item._page_panel_index = active_panel.index
-            item._page_frame = QRectF(frame)
-            self.scene.set_active_page_panel(active_panel.index)
-        self.props.update_for_redaction(item)
-        self.ctx_toolbar.hide_toolbar()
-        self.statusBar().showMessage("在画布上拖动涂抹需要打码的区域")
 
     # ------------------------------------------------------------------
     # Selection → inspector + ContextToolbar

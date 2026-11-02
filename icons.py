@@ -209,18 +209,6 @@ ICON_CROP = """
   stroke="{color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 """
 
-# 笔刷：一支斜置的画笔 + 一道涂抹痕迹
-ICON_BRUSH = """
-<path d="M15.2 2.6a2 2 0 0 1 2.8 0l1.4 1.4a2 2 0 0 1 0 2.8l-6.6 6.6-4.2-4.2z"
-  fill="{color}" opacity="0.18" stroke="{color}" stroke-width="1.4"
-  stroke-linejoin="round"/>
-<path d="M8.6 9.2l4.2 4.2-1.4 1.4a3 3 0 0 1-4.2 0 3 3 0 0 1 0-4.2z"
-  fill="{color}" opacity="0.55" stroke="{color}" stroke-width="1.2"
-  stroke-linejoin="round"/>
-<path d="M4.6 15.4c1.2 0 2 0.8 2 2s-1 2-3.4 2c1-0.8 1-1.6 1-2.4 0-1 0.4-1.6 0.4-1.6z"
-  fill="{color}" opacity="0.85"/>
-"""
-
 ICON_ROTATE = """
 <path d="M3.2 10a6.8 6.8 0 1 1 2.0 4.8"
   stroke="{color}" stroke-width="1.8" stroke-linecap="round" fill="none"/>
