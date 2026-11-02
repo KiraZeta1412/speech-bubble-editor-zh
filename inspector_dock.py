@@ -200,7 +200,10 @@ class CollageTemplateButton(QToolButton):
         self._aspect = "方形 · 1:1"
         self._rects: list[QRectF] = []
         self.setCheckable(True)
-        self.setFixedSize(56, 64)
+        # 横向拉伸填满整行，避免 4 列按钮右侧留一大块空白
+        self.setMinimumSize(52, 64)
+        self.setMaximumHeight(64)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setToolTip(f"使用「{label}」布局")
         self._refresh_rects()
 
@@ -286,19 +289,15 @@ class CollageTemplateStrip(QWidget):
         self._group = QButtonGroup(self)
         self._group.setExclusive(True)
 
+        # 不套内层滚动区：属性面板本身已经是滚动区，两层滚动会让滚轮事件
+        # 冒到外层，出现「滚小框时大框也跟着动」。12 个布局 4 列 3 行一次看全。
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setFixedHeight(146)
-
         inner = QWidget()
         grid = QGridLayout(inner)
-        grid.setContentsMargins(0, 0, 4, 0)
+        grid.setContentsMargins(0, 0, 0, 0)
         grid.setSpacing(4)
         names = [n for n in collage_maker.LAYOUT_TYPES if n != "自动"]
         for index, name in enumerate(names):
@@ -309,9 +308,7 @@ class CollageTemplateStrip(QWidget):
             grid.addWidget(btn, index // self.COLUMNS, index % self.COLUMNS)
             btn.clicked.connect(
                 lambda checked, value=name: checked and self._select(value))
-        grid.setRowStretch(grid.rowCount(), 1)
-        scroll.setWidget(inner)
-        outer.addWidget(scroll)
+        outer.addWidget(inner)
         self.setCurrentText("马赛克")
 
     def _select(self, value):
