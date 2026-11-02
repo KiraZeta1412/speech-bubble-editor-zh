@@ -26,6 +26,7 @@ from editor_controller import EditorController
 from version import __version__, __app_name__
 from constants import VIDEO_EXTENSIONS, IMAGE_EXTENSIONS, ALL_EXTENSIONS
 from file_dialogs import open_file
+from redaction import STYLE_MOSAIC
 from about_dialog import AboutDialog
 from shortcuts_dialog import ShortcutsDialog
 
@@ -129,8 +130,7 @@ class MainWindow(QMainWindow):
         # ToolSidebar
         sb.add_bubble_requested.connect(self._on_add_bubble_clicked)
         sb.add_text_requested.connect(lambda: self._on_add_bubble_with_style("text"))
-        sb.add_blur_requested.connect(lambda: self._on_add_redaction("blur"))
-        sb.add_pixelate_requested.connect(lambda: self._on_add_redaction("pixelate"))
+        sb.add_redact_requested.connect(self._on_add_redaction)
         sb.add_layer_requested.connect(self._on_add_layer)
         sb.crop_requested.connect(self._on_crop)
         sb.rotate_requested.connect(self._on_rotate)
@@ -728,19 +728,23 @@ class MainWindow(QMainWindow):
         self.props.update_for_bubble(bubble)
         self.ctx_toolbar.show_for_bubble()
 
-    def _on_add_redaction(self, mode: str):
+    def _on_add_redaction(self, mode: str | None = None):
+        """新增一块打码区域。样式可在属性面板里随时切换。"""
         if not self.scene.has_photo():
             return
         page_mode = self.scene.is_manga_mode() or self.scene.is_collage_mode()
         active_panel = self.scene.active_page_panel() if page_mode else None
         if page_mode and active_panel is None:
             self.statusBar().showMessage(
-                "Select a Comic/Collage frame before adding Blur or Pixelate")
+                "添加打码前请先选中一个漫画分格或拼贴画框")
             return
         frame = (active_panel.sceneBoundingRect() if active_panel is not None
                  else self.scene.sceneRect())
         c = frame.center()
-        item = self.controller.add_redaction(c.x(), c.y(), mode=mode)
+        # 默认用上次用过的样式；没有就用马赛克
+        style = mode or getattr(self, "_last_redact_style", None) or STYLE_MOSAIC
+        item = self.controller.add_redaction(c.x(), c.y(), mode=style)
+        self._last_redact_style = item.get_mode()
         if active_panel is not None:
             item.attach_to_page_panel(active_panel.index, frame)
             self.scene.set_active_page_panel(active_panel.index)

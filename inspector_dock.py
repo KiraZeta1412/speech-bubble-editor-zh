@@ -27,7 +27,7 @@ import bubble_defaults
 import i18n
 from bubble import BubbleItem, TEXT_PRESETS, TAIL_SHAPES
 from media_item import MediaItem
-from redaction import RedactionItem
+from redaction import (RedactionItem, STYLE_MOSAIC, STYLE_BLUR, STYLE_FILL)
 from speedlines import SpeedLinesItem
 from undo_commands import (
     TextChangeCommand, StyleChangeCommand, FontChangeCommand,
@@ -1168,34 +1168,98 @@ class InspectorDock(QWidget):
         self._inspector_lay.addWidget(section)
 
     def _build_redact_section(self):
-        """Controls for a selected blur/pixelate redaction box."""
+        """一块打码区域的控制项：三种样式 + 各自的参数 + 羽化。"""
         section = AccordionSection("打码")
+
+        # ── 样式三选一 ───────────────────────────────────────────────
         row = QHBoxLayout()
-        row.addWidget(self._label("模式"))
-        self._redact_mode_group = QButtonGroup(self)
-        self._redact_mode_group.setExclusive(True)
-        self._redact_blur_btn = QToolButton()
-        self._redact_blur_btn.setText("模糊")
-        self._redact_blur_btn.setCheckable(True)
-        self._redact_blur_btn.setToolTip("柔化框下方区域")
-        self._redact_blur_btn.clicked.connect(lambda: self._on_redact_mode("blur"))
-        self._redact_pix_btn = QToolButton()
-        self._redact_pix_btn.setText("像素化")
-        self._redact_pix_btn.setCheckable(True)
-        self._redact_pix_btn.setToolTip("Pixelate / mosaic the area beneath the box")
-        self._redact_pix_btn.clicked.connect(lambda: self._on_redact_mode("pixelate"))
-        self._redact_mode_group.addButton(self._redact_blur_btn)
-        self._redact_mode_group.addButton(self._redact_pix_btn)
-        row.addWidget(self._redact_blur_btn, stretch=1)
-        row.addWidget(self._redact_pix_btn, stretch=1)
+        row.addWidget(self._label("样式"))
+        self._redact_style_group = QButtonGroup(self)
+        self._redact_style_group.setExclusive(True)
+        self._redact_style_btns = {}
+        for style, text, tip in (
+            (STYLE_MOSAIC, "马赛克", "按块降采样打码，块越大越糊"),
+            (STYLE_BLUR,   "高斯模糊", "真正的 Gaussian 模糊，边缘柔和"),
+            (STYLE_FILL,   "纯色填充", "用纯色盖住；可自动取区域内平均色"),
+        ):
+            btn = QToolButton()
+            btn.setText(text)
+            btn.setCheckable(True)
+            btn.setToolTip(tip)
+            btn.clicked.connect(lambda _checked=False, s=style: self._on_redact_mode(s))
+            self._redact_style_group.addButton(btn)
+            self._redact_style_btns[style] = btn
+            row.addWidget(btn, stretch=1)
         section.body_lay.addLayout(row)
-        self._redact_intensity = self._compact_slider_row(
-            section.body_lay, "强度", 1, 100, 55, " %",
-            self._on_redact_intensity,
-            tooltip="Blur strength / pixel density")
+
+        # 每个参数放进独立容器，便于按样式整行显示/隐藏
+        def param_box():
+            box = QWidget()
+            lay = QVBoxLayout(box)
+            lay.setContentsMargins(0, 0, 0, 0)
+            lay.setSpacing(4)
+            section.body_lay.addWidget(box)
+            return box
+
+        self._redact_block_box = param_box()
+        self._redact_block = self._compact_slider_row(
+            self._redact_block_box.layout(), "块大小", 2, 64, 14, " px",
+            self._on_redact_block,
+            tooltip="马赛克每块的边长，越大越糊")
+
+        self._redact_blur_box = param_box()
+        self._redact_blur = self._compact_slider_row(
+            self._redact_blur_box.layout(), "模糊半径", 1, 64, 12, " px",
+            self._on_redact_blur,
+            tooltip="高斯模糊半径，越大越糊")
+
+        self._redact_fill_box = param_box()
+        self._redact_fill_color_btn, self._redact_fill_hex = self._color_row(
+            self._redact_fill_box.layout(), "填充颜色", QColor("#101010"),
+            self._on_redact_fill_color,
+            tooltip="纯色填充使用的颜色")
+        self._redact_fill_auto = QCheckBox("自动取区域平均色")
+        self._redact_fill_auto.setToolTip("用框内平均色填充，融进背景更自然")
+        self._redact_fill_auto.toggled.connect(self._on_redact_fill_auto)
+        self._redact_fill_box.layout().addWidget(self._redact_fill_auto)
+
+        self._redact_feather = self._compact_slider_row(
+            section.body_lay, "羽化", 0, 40, 0, " px",
+            self._on_redact_feather,
+            tooltip="边缘软过渡，0 = 硬边")
+
         section.setVisible(False)
         self._redact_section = section
         self._inspector_lay.addWidget(section)
+
+    def _sync_redact_visibility(self):
+        """按当前样式显示对应参数。"""
+        mode = (self._redact_item.get_mode()
+                if self._redact_item is not None else STYLE_MOSAIC)
+        self._redact_block_box.setVisible(mode == STYLE_MOSAIC)
+        self._redact_blur_box.setVisible(mode == STYLE_BLUR)
+        self._redact_fill_box.setVisible(mode == STYLE_FILL)
+
+    def _sync_redact_controls(self):
+        """把选中项的参数回填到控件里。"""
+        item = self._redact_item
+        if item is None:
+            return
+        self._updating = True
+        try:
+            mode = item.get_mode()
+            btn = self._redact_style_btns.get(mode)
+            if btn is not None:
+                btn.setChecked(True)
+            self._redact_block.setValue(item.get_block_size())
+            self._redact_blur.setValue(item.get_blur_radius())
+            self._redact_feather.setValue(item.get_feather())
+            _set_btn_color(self._redact_fill_color_btn, item.get_fill_color())
+            self._redact_fill_hex.setText(item.get_fill_color().name().upper())
+            self._redact_fill_auto.setChecked(item.is_fill_auto())
+        finally:
+            self._updating = False
+        self._sync_redact_visibility()
 
     def update_for_redaction(self, item):
         self._manga_section.setVisible(False)
@@ -1212,22 +1276,40 @@ class InspectorDock(QWidget):
         self._set_placeholder_visible(False)
         self._configure_tabs_for_page_mode()
         self._show_tab(self.FX_TAB)
-        self._updating = True
-        try:
-            self._redact_blur_btn.setChecked(item.get_mode() == "blur")
-            self._redact_pix_btn.setChecked(item.get_mode() == "pixelate")
-            self._redact_intensity.setValue(item.get_intensity())
-        finally:
-            self._updating = False
+        self._sync_redact_controls()
         self._refresh_layers()
 
+    # ── 打码参数回调 ─────────────────────────────────────────────────
     def _on_redact_mode(self, mode: str):
         if self._redact_item and not self._updating:
             self._redact_item.set_mode(mode)
+            self._sync_redact_visibility()
 
-    def _on_redact_intensity(self, value: int):
+    def _on_redact_block(self, value: int):
         if self._redact_item and not self._updating:
-            self._redact_item.set_intensity(value)
+            self._redact_item.set_block_size(value)
+
+    def _on_redact_blur(self, value: int):
+        if self._redact_item and not self._updating:
+            self._redact_item.set_blur_radius(value)
+
+    def _on_redact_feather(self, value: int):
+        if self._redact_item and not self._updating:
+            self._redact_item.set_feather(value)
+
+    def _on_redact_fill_color(self):
+        if not self._redact_item or self._updating:
+            return
+        color = QColorDialog.getColor(self._redact_item.get_fill_color(), self,
+                                      "选择填充颜色")
+        if color.isValid():
+            self._redact_item.set_fill_color(color)
+            _set_btn_color(self._redact_fill_color_btn, color)
+            self._redact_fill_hex.setText(color.name().upper())
+
+    def _on_redact_fill_auto(self, checked: bool):
+        if self._redact_item and not self._updating:
+            self._redact_item.set_fill_auto(checked)
 
     # Reverse-engineered from the reference sheet: a balloon there carries a
     # halftone shadow, radiating strokes, a star, an exclamation mark and little

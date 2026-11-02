@@ -25,8 +25,7 @@ TOOL_DEFS = [
     ("bubble",  "气泡",  ICON_BUBBLE,  "Ctrl+B", False, False),
     ("text",    "文字",    ICON_TEXT,    "T",      False, False),
     ("lines",   "线条",   ICON_SPEEDLINES, None,  False, False),
-    ("blur",    "模糊",    ICON_BLUR,    None,     False, False),
-    ("pixelate","像素化",ICON_PIXELATE,None,     False, False),
+    ("redact",  "打码",    ICON_PIXELATE,None,     False, False),
     ("layers",  "图层",  ICON_LAYERS,  "Ctrl+L", False, False),
     ("meme",    "梗图",    ICON_MEME,    None,     True,  False),
     ("dual",    "双格",    ICON_DUAL,    None,     True,  False),
@@ -34,7 +33,7 @@ TOOL_DEFS = [
     ("manga",   "漫画",   ICON_MANGA,   None,     True,  False),
 ]
 
-MEDIA_GATED = {"crop", "rotate", "bubble", "text", "lines", "blur", "pixelate",
+MEDIA_GATED = {"crop", "rotate", "bubble", "text", "lines", "redact",
                "layers", "meme", "dual"}
 
 
@@ -45,8 +44,7 @@ class ToolSidebar(QWidget):
     crop_requested       = pyqtSignal()
     rotate_requested     = pyqtSignal()
     add_lines_requested  = pyqtSignal()
-    add_blur_requested   = pyqtSignal()
-    add_pixelate_requested = pyqtSignal()
+    add_redact_requested = pyqtSignal()
     add_layer_requested  = pyqtSignal()
     meme_toggled         = pyqtSignal(bool)
     dual_toggled         = pyqtSignal(bool)
@@ -74,7 +72,7 @@ class ToolSidebar(QWidget):
         self._tool_group = QButtonGroup(self)
         self._tool_group.setExclusive(True)
 
-        group_breaks = {"crop", "bubble", "blur", "layers", "meme"}
+        group_breaks = {"crop", "bubble", "redact", "layers", "meme"}
         for tool_id, label, svg, shortcut, checkable, in_group in TOOL_DEFS:
             if tool_id in group_breaks:
                 lay.addSpacing(6)
@@ -91,8 +89,7 @@ class ToolSidebar(QWidget):
         self._buttons["crop"].clicked.connect(self.crop_requested)
         self._buttons["rotate"].clicked.connect(self.rotate_requested)
         self._buttons["lines"].clicked.connect(self.add_lines_requested)
-        self._buttons["blur"].clicked.connect(self.add_blur_requested)
-        self._buttons["pixelate"].clicked.connect(self.add_pixelate_requested)
+        self._buttons["redact"].clicked.connect(self.add_redact_requested)
         self._buttons["layers"].clicked.connect(self.add_layer_requested)
         self._buttons["meme"].toggled.connect(self.meme_toggled)
         self._buttons["dual"].toggled.connect(self.dual_toggled)
@@ -230,7 +227,7 @@ class ToolSidebar(QWidget):
     def set_manga_mode_active(self, active: bool, base_media_loaded: bool):
         """Enable page-safe tools in Comic mode, including on a blank page."""
         if active:
-            for tool_id in ("bubble", "text", "lines", "blur", "pixelate", "layers"):
+            for tool_id in ("bubble", "text", "lines", "redact", "layers"):
                 self._buttons[tool_id].setEnabled(True)
             for tool_id in ("crop", "rotate", "meme", "dual"):
                 self._buttons[tool_id].setEnabled(False)
