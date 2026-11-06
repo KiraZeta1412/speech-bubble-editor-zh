@@ -2532,12 +2532,19 @@ class InspectorDock(QWidget):
         lay.addWidget(self._slant_hint)
 
         note = QLabel(
-            "斜切分块数量固定（由预设决定），不能像规整布局那样随照片数自适应 —— "
-            "斜向形状自适应容易产生缝隙或重叠。外距和画框宽度仍然生效，"
-            "分块之间靠画框颜色分隔效果最好。")
+            "斜切块数固定；分块之间靠「间距」和「画框宽度」分隔。")
         note.setObjectName("InspectorHint")
         note.setWordWrap(True)
         lay.addWidget(note)
+
+        # 样式控制（背景 / 画框 / 间距 / 圆角 / 外距）挂在下面的宿主里 ——
+        # 切到斜切 tab 时把拼贴那份 section 搬过来，两个 tab 都能直接改，
+        # 不用来回切换，也不需要维护两份控件。
+        self._slant_style_host = QWidget()
+        self._slant_style_lay = QVBoxLayout(self._slant_style_host)
+        self._slant_style_lay.setContentsMargins(0, 0, 0, 0)
+        self._slant_style_lay.setSpacing(6)
+        lay.addWidget(self._slant_style_host)
         lay.addStretch(1)
 
         scroll = QScrollArea()
@@ -2702,6 +2709,8 @@ class InspectorDock(QWidget):
         section.setVisible(False)
         self._collage_fx_section = section
         self._inspector_lay.addWidget(section)
+        # 记住原始位置：切到「斜切」tab 时会把它搬走，切回来要能放回原位
+        self._collage_fx_home_index = self._inspector_lay.indexOf(section)
 
     def _set_collage_layout_option(self, key: str, value):
         if not self._updating and self._scene is not None:
@@ -3209,8 +3218,46 @@ class InspectorDock(QWidget):
 
     def _stack_tab(self, index: int):
         self._stack.setCurrentIndex(index)
+        self._place_collage_style(index)
         if index == self.LAYERS_TAB:
             self._refresh_layers()
+
+    def _place_collage_style(self, index: int):
+        """把「拼贴颜色与画框」搬到当前 tab，让拼贴和斜切都能直接调。
+
+        只有一份控件，在形状页和斜切页之间搬 —— 两个 tab 不会同时显示，
+        所以不用担心状态不同步。顺带管可见性：不在拼贴模式就藏起来，
+        并且发现它「无家可归」时自动放回原位，避免调用顺序导致控件丢失。
+        """
+        section = getattr(self, "_collage_fx_section", None)
+        slanted_lay = getattr(self, "_slant_style_lay", None)
+        if section is None or slanted_lay is None:
+            return
+
+        collage = bool(self._scene and self._scene.is_collage_mode())
+        section.setVisible(collage)
+        if not collage:
+            index = self.SHAPE_TAB
+
+        target = slanted_lay if index == self.SLANTED_TAB else self._inspector_lay
+        home = getattr(self, "_collage_fx_home_index", -1)
+
+        # 已经在对的布局里就只确认一下顺序，不用搬
+        if target.indexOf(section) != -1:
+            if target is self._inspector_lay and 0 <= home < target.count():
+                if target.indexOf(section) != home:
+                    target.removeWidget(section)
+                    target.insertWidget(home, section)
+            return
+
+        for lay in (self._inspector_lay, slanted_lay):
+            if lay.indexOf(section) != -1:
+                lay.removeWidget(section)
+
+        if target is self._inspector_lay and 0 <= home <= target.count():
+            target.insertWidget(home, section)
+        else:
+            target.addWidget(section)
 
     def _configure_tabs_for_page_mode(self):
         """Keep page controls and selected-object controls from colliding."""
@@ -3229,6 +3276,8 @@ class InspectorDock(QWidget):
         self._tabs.setTabVisible(self.SLANTED_TAB, collage)
         if collage:
             self._sync_slanted_controls()
+            # 「拼贴颜色与画框」跟着当前 tab 走（拼贴 / 斜切都能直接改）
+            self._place_collage_style(self._tabs.currentIndex())
             # 当前用的是斜切布局就自动停在那页，反之停在「拼贴」页
             if slanted and self._tabs.currentIndex() not in (
                     self.FX_TAB, self.LAYERS_TAB):

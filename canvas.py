@@ -1368,10 +1368,8 @@ class PhotoScene(QGraphicsScene):
         seed_source = random.SystemRandom()
 
         # 间距(gap)存在布局设置里，但分格绘制要从 style 里读 ——
-        # 这里合成一份带 gap 的样式，让斜切也能用「间距」参数。
-        panel_style = dict(self._collage_style)
-        panel_style["gap"] = max(0.0, float(
-            self._collage_layout_settings.get("gap", 0)))
+        # 统一走 _panel_style()，避免和 set_collage_style 各合成一份。
+        panel_style = self._panel_style()
 
         for index, (box, points) in enumerate(cells):
             pixmap = pixmaps[index] if index < len(pixmaps) else None
@@ -1471,6 +1469,18 @@ class PhotoScene(QGraphicsScene):
         self._sync_page_frame_effects()
         self.manga_layout_changed.emit(layout_name)
 
+    def _panel_style(self) -> dict:
+        """传给分格的样式：拼贴样式 + 布局里的间距(gap)。
+
+        分格绘制要从 style 里读 gap，但 gap 存在布局设置里 ——
+        建页和后续改样式都必须走这里，否则一改样式 gap 就丢，
+        表现为「调完画框宽度再调回来，间距变小了」。
+        """
+        style = dict(self._collage_style)
+        style["gap"] = max(0.0, float(
+            self._collage_layout_settings.get("gap", 0) or 0))
+        return style
+
     def set_collage_style(self, key: str, value):
         if key not in self._collage_style:
             return
@@ -1483,8 +1493,9 @@ class PhotoScene(QGraphicsScene):
         self._collage_style[key] = value
         if key == "page_color" and self._manga_page is not None:
             self._manga_page.setBrush(QBrush(QColor(value)))
+        panel_style = self._panel_style()
         for panel in self._manga_panels:
-            panel.set_style(self._collage_style)
+            panel.set_style(panel_style)
 
     def apply_collage_theme(self, name: str):
         themes = {
