@@ -1366,6 +1366,13 @@ class PhotoScene(QGraphicsScene):
 
         self._manga_panels = []
         seed_source = random.SystemRandom()
+
+        # 间距(gap)存在布局设置里，但分格绘制要从 style 里读 ——
+        # 这里合成一份带 gap 的样式，让斜切也能用「间距」参数。
+        panel_style = dict(self._collage_style)
+        panel_style["gap"] = max(0.0, float(
+            self._collage_layout_settings.get("gap", 0)))
+
         for index, (box, points) in enumerate(cells):
             pixmap = pixmaps[index] if index < len(pixmaps) else None
             # 平移到页面坐标
@@ -1373,7 +1380,7 @@ class PhotoScene(QGraphicsScene):
                               box.width(), box.height())
             page_points = [(p.x() + margin, p.y() + margin) for p in points]
             panel = MangaPanelItem(
-                index, page_box, pixmap, self._collage_style,
+                index, page_box, pixmap, panel_style,
                 seed_source.randrange(2**31), show_number=False,
                 reading_direction="从左到右", polygon=page_points)
             self.addItem(panel)

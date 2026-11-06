@@ -11,7 +11,8 @@ import random
 
 from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import (
-    QColor, QBrush, QCursor, QFont, QPainter, QPainterPath, QPen, QPixmap,
+    QColor, QBrush, QCursor, QFont, QPainter, QPainterPath, QPainterPathStroker,
+    QPen, QPixmap,
 )
 from PyQt6.QtWidgets import (
     QGraphicsItem,
@@ -111,6 +112,41 @@ def generate_layout(panel_count: int | None = None, rng: random.Random | None = 
     return rects, name, count
 
 
+def _shrink_path(path: QPainterPath, amount: float) -> QPainterPath:
+    """把闭合路径均匀内缩 amount 像素。
+
+    做法：沿边界描一圈宽 2*amount 的边，再从原路径里减掉 —— 内半圈正好
+    让边界整体向内退 amount。任意多边形都成立，尖角处不会像逐点平移那样失真。
+    """
+    if amount <= 0 or path.isEmpty():
+        return path
+    stroker = QPainterPathStroker()
+    stroker.setWidth(amount * 2.0)
+    stroker.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
+    outline = stroker.createStroke(path)
+    shrunk = path.subtracted(outline)
+    return shrunk if not shrunk.isEmpty() else path
+
+
+def _round_path(path: QPainterPath, radius: float) -> QPainterPath:
+    """给路径的凸角加圆角。
+
+    先内缩 radius（尖角被切掉），再用圆角笔触撑回 radius ——
+    这一步形态学开运算把凸角磨圆，凹角不受影响。
+    """
+    if radius <= 0 or path.isEmpty():
+        return path
+    inner = _shrink_path(path, radius)
+    if inner.isEmpty():
+        return path
+    stroker = QPainterPathStroker()
+    stroker.setWidth(radius * 2.0)
+    stroker.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+    stroker.setCapStyle(Qt.PenCapStyle.RoundCap)
+    grown = inner.united(stroker.createStroke(inner))
+    return grown if not grown.isEmpty() else path
+
+
 class MangaPanelItem(QGraphicsObject):
     """A clipped viewport supporting crop drag and magnetic image reordering."""
 
@@ -189,23 +225,20 @@ class MangaPanelItem(QGraphicsObject):
     def _make_polygon_path(self, strength: float) -> QPainterPath:
         """把归一化多边形点缩放成路径（斜切分格用）。
 
-        strength < 1 时向内收一点，给描边留位置 —— 与手绘矩形路径的
-        inset 逻辑保持一致，否则边框会压在相邻分格上。
+        和矩形的 inset 逻辑对齐，但斜切要处理三件事：
+          1. 间距(gap)：每个分格均匀内缩 gap/2，分开相邻分格
+          2. 画框宽度：填充路径再内缩 border/2，给描边让位
+          3. 圆角半径：做一次「先缩后胀」的圆角处理
+
+        用的都是路径布尔运算（QPainterPathStroker + subtracted/united），
+        所以任意多边形都成立，不像逐点朝质心平移那样在尖角处失真。
         """
         border_width = float(self._style.get("border_width", 6.0))
-        inset = max(0.0, border_width * 0.5 * strength) if strength >= 1.0 else 0.0
-        cx, cy = self._width / 2, self._height / 2
-        points = []
-        for nx, ny in self._polygon_norm:
-            x = nx * self._width
-            y = ny * self._height
-            if inset > 0:
-                # 朝中心方向收 inset 像素
-                dx, dy = cx - x, cy - y
-                length = max(1e-6, (dx * dx + dy * dy) ** 0.5)
-                x += dx / length * inset
-                y += dy / length * inset
-            points.append(QPointF(x, y))
+        gap = max(0.0, float(self._style.get("gap", 0.0) or 0.0))
+        radius = max(0.0, float(self._style.get("corner_radius", 0.0) or 0.0))
+
+        points = [QPointF(nx * self._width, ny * self._height)
+                  for nx, ny in self._polygon_norm]
         if len(points) < 3:
             path = QPainterPath()
             path.addRect(QRectF(0, 0, self._width, self._height))
@@ -214,6 +247,19 @@ class MangaPanelItem(QGraphicsObject):
         for point in points[1:]:
             path.lineTo(point)
         path.closeSubpath()
+
+        # 1) 间距：两条相邻分格各缩 gap/2，合起来正好一个 gap
+        if gap > 0.2:
+            path = _shrink_path(path, gap / 2.0)
+
+        # 2) 填充路径额外让出画框宽度（描边路径不需要）
+        if strength >= 1.0 and border_width > 0.2:
+            path = _shrink_path(path, border_width / 2.0)
+
+        # 3) 圆角：先缩 radius 再胀回 radius，凸角就被磨圆
+        if radius > 0.5:
+            path = _round_path(path, radius)
+
         return path
 
     def _make_hand_path(self, seed: int, roughness: float,
