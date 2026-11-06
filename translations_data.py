@@ -4,7 +4,7 @@
 由汉化过程生成的对照表，供 i18n.py 使用。改文案时两边一起改。
 """
 
-EN_TO_ZH = {  # 768 条
+EN_TO_ZH = {  # 776 条
     '  Fit Width  ': '  适应宽度  ',
     '  Fit Window  ': '  适应窗口  ',
     ' Image': ' 图片',
@@ -63,6 +63,7 @@ EN_TO_ZH = {  # 768 条
     'Background space around the outside of the collage': '拼贴外围的背景空白',
     'Balanced': '均衡',
     'Balloon Preset': '气泡预设',
+    'Band 3': '斜带 3',
     'Banner': '横幅',
     'Big left': '大图左',
     'Big moment · 4': '大场面 · 4',
@@ -179,6 +180,8 @@ EN_TO_ZH = {  # 768 条
     'Control visibility and front-to-back order.': '控制可见性和前后顺序。',
     'Copy': '复制',
     'Copy Text': '复制文字',
+    'Corner 3': '斜角 3',
+    'Corner 4': '斜角 4',
     'Corner radius': '圆角半径',
     'Could not open media': '无法打开媒体',
     "Cover with a solid color; can auto-pick the area's average": '用纯色盖住；可自动取区域内平均色',
@@ -216,6 +219,7 @@ EN_TO_ZH = {  # 768 条
     'Density': '密度',
     'Design your own collage layout': '自己设计拼贴布局',
     'Diagonal 2': '对角 2',
+    'Diagonal 4': '斜对角 4',
     'Dialogue': '对话',
     'Divider': '分隔线',
     'Divider Color': '分隔线颜色',
@@ -606,8 +610,11 @@ EN_TO_ZH = {  # 768 条
     'Six balanced panels for general storytelling': '六个均衡分格，适合一般叙事',
     'Six panels for a conventional comic page': '六个分格，常规漫画页面',
     'Size': '大小',
+    'Slant 1+2': '斜一二',
+    'Slant 1+3': '斜一三',
     'Slant 3': '斜条 3',
     'Slant 3 layers': '斜三层',
+    'Slant 3+1': '斜三一',
     'Slant 4': '斜条 4',
     'Slant grid 4': '斜格 4',
     'Slant grid 6': '斜格 6',
@@ -743,6 +750,7 @@ EN_TO_ZH = {  # 768 条
     'Wobbly — hand-drawn box': '歪扭 — 手绘方框',
     'Yellow Pop': '黄色醒目',
     'Yellow balloon for emphasis': '黄色气泡用于强调',
+    'Zigzag 3': '错层 3',
     'Zoom': '缩放',
     'Zoom in': '放大',
     'Zoom level — click to change': '缩放级别 — 点击更改',
@@ -775,7 +783,7 @@ EN_TO_ZH = {  # 768 条
     '＋ Bubble': '＋ 气泡',
 }
 
-ZH_TO_EN = {  # 748 条
+ZH_TO_EN = {  # 756 条
     '  适应宽度  ': '  Fit Width  ',
     '  适应窗口  ': '  Fit Window  ',
     ' px 描边': ' px outline',
@@ -1145,11 +1153,16 @@ ZH_TO_EN = {  # 748 条
     '文字预设': 'Text presets',
     '文字颜色': 'Text colour',
     '文字颜色 — 点击选取': 'Text color — click to pick',
+    '斜一三': 'Slant 1+3',
+    '斜一二': 'Slant 1+2',
+    '斜三一': 'Slant 3+1',
     '斜三层': 'Slant 3 layers',
     '斜体': 'Italic',
     '斜切': 'Slanted',
     '斜切布局': 'Slanted layout',
     '斜切拼贴': 'Slanted collage',
+    '斜对角 4': 'Diagonal 4',
+    '斜带 3': 'Band 3',
     '斜条 3': 'Slant 3',
     '斜条 4': 'Slant 4',
     '斜格 4': 'Slant grid 4',
@@ -1157,6 +1170,8 @@ ZH_TO_EN = {  # 748 条
     '斜梯形 2': 'Trapezoid 2',
     '斜梯形 3': 'Trapezoid 3',
     '斜梯形 4': 'Trapezoid 4',
+    '斜角 3': 'Corner 3',
+    '斜角 4': 'Corner 4',
     '新建项目': 'New project',
     '新气泡默认值': 'New bubble defaults',
     '方形': 'Square',
@@ -1480,6 +1495,7 @@ ZH_TO_EN = {  # 748 条
     '重置为出厂默认': 'Reset to Factory Defaults',
     '重置项目': 'Reset project',
     '锁定宽高比': 'Lock Aspect Ratio',
+    '错层 3': 'Zigzag 3',
     '键盘快捷键': 'Keyboard Shortcuts',
     '长锥形呼喊线': 'Long tapered shout strokes',
     '闪电': 'Bolt',
