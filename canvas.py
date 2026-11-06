@@ -22,6 +22,9 @@ from constants import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
 
 ALL_MEDIA_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
 
+# 斜切拼贴用 layout_type 前缀标记，例如 "斜切:diag2"（定义见 slanted_layouts）
+from slanted_layouts import SLANT_PREFIX  # noqa: E402
+
 _BAR_FRACTION  = 0.065  # caption bar height as fraction of photo height
 _DUAL_GAP      = 4      # pixel gap between left and right media (module-level fallback)
 _ZOOM_STEP_IN  = 1.25
@@ -1287,6 +1290,11 @@ class PhotoScene(QGraphicsScene):
         from collage_maker import COLLAGE_COUNTS, generate_collage_layout
         from manga_maker import create_page_background, MangaPanelItem
 
+        layout_type = str(self._collage_layout_settings.get("layout_type", ""))
+        if layout_type.startswith(SLANT_PREFIX):
+            self._build_slanted_page(pixmaps, layout_type[len(SLANT_PREFIX):])
+            return
+
         needed = min(len(pixmaps), max(COLLAGE_COUNTS))
         requested = int(self._collage_layout_settings.get("photo_count", 4))
         count = max(requested, needed, min(COLLAGE_COUNTS))
@@ -1318,6 +1326,66 @@ class PhotoScene(QGraphicsScene):
         self._sync_page_frame_effects()
         self.manga_layout_changed.emit(layout_name)
 
+    def is_slanted_layout(self) -> bool:
+        """当前拼贴页是否用的是斜切预设。"""
+        try:
+            return str(self._collage_layout_settings.get(
+                "layout_type", "")).startswith(SLANT_PREFIX)
+        except Exception:
+            return False
+
+    def _build_slanted_page(self, pixmaps: list[QPixmap], preset_id: str):
+        """斜切拼贴页：分格是多边形（梯形 / 平行四边形 / 三角形）。
+
+        复用规整拼贴的整套管线（分格、放图、活动分格、导出），
+        只有几何来源不同：这里从 slanted_layouts 的预设取多边形。
+        """
+        import random
+        import slanted_layouts
+        from collage_maker import page_size as collage_page_size
+        from manga_maker import create_page_background, MangaPanelItem
+
+        if slanted_layouts.get(preset_id) is None:
+            preset_id = slanted_layouts.default_id()
+
+        aspect_name = str(self._collage_layout_settings.get(
+            "aspect_ratio", "方形 · 1:1"))
+        page_w, page_h = collage_page_size(aspect_name)
+        margin = max(0.0, float(self._collage_layout_settings.get("margin", 28)))
+
+        # 外距直接作用在多边形坐标上（内缩后按比例铺满）
+        span_w = max(80.0, page_w - 2 * margin)
+        span_h = max(80.0, page_h - 2 * margin)
+        cells = slanted_layouts.polygon_rects(preset_id, span_w, span_h)
+
+        self._collage_layout_settings["photo_count"] = len(cells)
+
+        self._manga_page = create_page_background(self._collage_style["page_color"])
+        self._manga_page.setRect(0, 0, page_w, page_h)
+        self.addItem(self._manga_page)
+
+        self._manga_panels = []
+        seed_source = random.SystemRandom()
+        for index, (box, points) in enumerate(cells):
+            pixmap = pixmaps[index] if index < len(pixmaps) else None
+            # 平移到页面坐标
+            page_box = QRectF(box.x() + margin, box.y() + margin,
+                              box.width(), box.height())
+            page_points = [(p.x() + margin, p.y() + margin) for p in points]
+            panel = MangaPanelItem(
+                index, page_box, pixmap, self._collage_style,
+                seed_source.randrange(2**31), show_number=False,
+                reading_direction="从左到右", polygon=page_points)
+            self.addItem(panel)
+            self._manga_panels.append(panel)
+
+        self.setSceneRect(QRectF(0, 0, page_w, page_h))
+        self._restore_active_page_panel()
+        self._sync_page_frame_effects()
+        self.manga_layout_changed.emit(
+            f"{len(cells)} 张照片  ·  {slanted_layouts.label(preset_id)}"
+            f"  ·  {aspect_name}")
+
     def regenerate_collage_layout(self):
         if not self._collage_mode:
             return
@@ -1337,8 +1405,18 @@ class PhotoScene(QGraphicsScene):
         if not self._collage_mode:
             return
         import random
-        choices = ["网格", "马赛克", "主图", "胶片条"]
+        import slanted_layouts
         current = str(self._collage_layout_settings["layout_type"])
+        if current.startswith(SLANT_PREFIX):
+            # 斜切模式下在斜切预设之间换
+            others = [pid for pid in slanted_layouts.preset_ids()
+                      if pid != current[len(SLANT_PREFIX):]]
+            if others:
+                self._collage_layout_settings["layout_type"] = (
+                    SLANT_PREFIX + random.SystemRandom().choice(others))
+                self.regenerate_collage_layout()
+            return
+        choices = ["网格", "马赛克", "主图", "胶片条"]
         alternatives = [name for name in choices if name != current]
         self._collage_layout_settings["layout_type"] = (
             random.SystemRandom().choice(alternatives or choices))
@@ -1353,11 +1431,17 @@ class PhotoScene(QGraphicsScene):
         if key in ("photo_count", "layout_type"):
             self.clearSelection()
             self.regenerate_collage_layout()
+        elif self.is_slanted_layout():
+            # 斜切布局不走 live relayout（几何来源不同），直接整页重建
+            self.regenerate_collage_layout()
         else:
             self.relayout_collage_live()
 
     def relayout_collage_live(self):
         if not self._collage_mode or not self._manga_panels:
+            return
+        if self.is_slanted_layout():
+            self.regenerate_collage_layout()
             return
         import random
         from collage_maker import generate_collage_layout

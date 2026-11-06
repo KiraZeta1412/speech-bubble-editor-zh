@@ -117,11 +117,22 @@ class MangaPanelItem(QGraphicsObject):
     def __init__(self, index: int, rect: QRectF, pixmap: QPixmap | None = None,
                  style: dict | None = None, seed: int | None = None,
                  show_number: bool = False,
-                 reading_direction: str = "从右到左"):
+                 reading_direction: str = "从右到左",
+                 polygon: list | None = None):
         super().__init__()
         self.index = index
         self._width = rect.width()
         self._height = rect.height()
+        # 斜切分格：存**相对包围盒的归一化点**（0..1），按宽高缩放成路径。
+        # 这样 set_panel_rect 时不用逐点换算，缩放自动正确。
+        self._polygon_norm: list[tuple[float, float]] | None = None
+        if polygon:
+            bw = max(1.0, rect.width())
+            bh = max(1.0, rect.height())
+            self._polygon_norm = [
+                ((float(p[0]) - rect.x()) / bw, (float(p[1]) - rect.y()) / bh)
+                for p in polygon
+            ]
         self._pixmap = QPixmap(pixmap) if pixmap is not None else QPixmap()
         self._zoom = 1.0
         self._offset = QPointF()
@@ -168,8 +179,42 @@ class MangaPanelItem(QGraphicsObject):
 
     def _rebuild_panel_path(self):
         roughness = float(self._style.get("roughness", 34.0))
+        if self._polygon_norm:
+            self._panel_path = self._make_polygon_path(1.0)
+            self._ink_path = self._make_polygon_path(0.72)
+            return
         self._panel_path = self._make_hand_path(self._seed, roughness, 1.0)
         self._ink_path = self._make_hand_path(self._seed + 7919, roughness, 0.72)
+
+    def _make_polygon_path(self, strength: float) -> QPainterPath:
+        """把归一化多边形点缩放成路径（斜切分格用）。
+
+        strength < 1 时向内收一点，给描边留位置 —— 与手绘矩形路径的
+        inset 逻辑保持一致，否则边框会压在相邻分格上。
+        """
+        border_width = float(self._style.get("border_width", 6.0))
+        inset = max(0.0, border_width * 0.5 * strength) if strength >= 1.0 else 0.0
+        cx, cy = self._width / 2, self._height / 2
+        points = []
+        for nx, ny in self._polygon_norm:
+            x = nx * self._width
+            y = ny * self._height
+            if inset > 0:
+                # 朝中心方向收 inset 像素
+                dx, dy = cx - x, cy - y
+                length = max(1e-6, (dx * dx + dy * dy) ** 0.5)
+                x += dx / length * inset
+                y += dy / length * inset
+            points.append(QPointF(x, y))
+        if len(points) < 3:
+            path = QPainterPath()
+            path.addRect(QRectF(0, 0, self._width, self._height))
+            return path
+        path = QPainterPath(points[0])
+        for point in points[1:]:
+            path.lineTo(point)
+        path.closeSubpath()
+        return path
 
     def _make_hand_path(self, seed: int, roughness: float,
                         strength: float) -> QPainterPath:
@@ -347,6 +392,28 @@ class MangaPanelItem(QGraphicsObject):
         self._offset.setX(max(-max_x, min(max_x, self._offset.x())))
         self._offset.setY(max(-max_y, min(max_y, self._offset.y())))
 
+    def _path_centroid(self) -> QPointF:
+        """多边形面积质心：中文占位图标画在这里才不会跑出斜切分格。"""
+        if not self._polygon_norm:
+            return QPointF(self._width / 2, self._height / 2)
+        points = [(nx * self._width, ny * self._height)
+                  for nx, ny in self._polygon_norm]
+        area = 0.0
+        cx = 0.0
+        cy = 0.0
+        n = len(points)
+        for i in range(n):
+            x1, y1 = points[i]
+            x2, y2 = points[(i + 1) % n]
+            cross = x1 * y2 - x2 * y1
+            area += cross
+            cx += (x1 + x2) * cross
+            cy += (y1 + y2) * cross
+        if abs(area) < 1e-9:
+            return QPointF(self._width / 2, self._height / 2)
+        area *= 0.5
+        return QPointF(cx / (6 * area), cy / (6 * area))
+
     def _blurred_background(self) -> QPixmap:
         """Cached soft cover image used behind a shrunken foreground photo."""
         width, height = max(1, int(self._width)), max(1, int(self._height))
@@ -380,7 +447,10 @@ class MangaPanelItem(QGraphicsObject):
             painter.fillPath(self._panel_path, empty_color)
 
             icon_size = max(38, int(min(self._width, self._height) * 0.12))
-            center = frame.center()
+            # 斜切分格用路径质心，否则占位图标会落在包围盒中心 —— 对三角形
+            # 分格来说那个点正好在斜边上，图标和文字会被切开。
+            center = (self._panel_path.boundingRect().center()
+                      if not self._polygon_norm else self._path_centroid())
             painter.setPen(QPen(placeholder_color, 7, Qt.PenStyle.SolidLine,
                                 Qt.PenCapStyle.RoundCap))
             painter.drawLine(QPointF(center.x() - icon_size / 2, center.y()),

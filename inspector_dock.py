@@ -27,6 +27,7 @@ import bubble_defaults
 import collage_maker
 import custom_layouts
 import i18n
+import slanted_layouts
 from bubble import BubbleItem, TEXT_PRESETS, TAIL_SHAPES
 from media_item import MediaItem
 from redaction import (RedactionItem, STYLE_MOSAIC, STYLE_BLUR, STYLE_FILL)
@@ -40,6 +41,9 @@ from undo_commands import (
     ZValueChangeCommand, TailShapeChangeCommand, TailCountChangeCommand,
     TextOutlineChangeCommand, InsetPhotoCommand,
 )
+
+# 斜切布局的类型前缀（与 canvas / slanted_layouts 保持一致）
+SLANT_PREFIX = slanted_layouts.SLANT_PREFIX
 
 
 STYLE_LABELS = {
@@ -275,6 +279,129 @@ class CollageTemplateButton(QToolButton):
         painter.setFont(font)
         painter.drawText(QRectF(2, self.height() - 15, self.width() - 4, 14),
                          int(Qt.AlignmentFlag.AlignCenter), i18n.tr(self.label))
+
+
+class SlantedPresetButton(QToolButton):
+    """斜切预设的缩略图：直接画多边形，不做矩形近似。"""
+
+    def __init__(self, preset_id: str, label: str, parent=None):
+        super().__init__(parent)
+        self.preset_id = preset_id
+        self.label = label
+        self._aspect = 1.0
+        self.setCheckable(True)
+        self.setMinimumSize(52, 64)
+        self.setMaximumHeight(64)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setToolTip(f"使用「{label}」斜切布局")
+
+    def set_aspect(self, aspect_name: str):
+        try:
+            self._aspect = float(collage_maker.ASPECT_RATIOS.get(aspect_name, 1.0))
+        except Exception:
+            self._aspect = 1.0
+        self.update()
+
+    def _page_rect(self) -> QRectF:
+        avail_w = max(10.0, self.width() - 12.0)
+        avail_h = max(10.0, self.height() - 22.0)
+        if self._aspect >= avail_w / avail_h:
+            w = avail_w
+            h = w / self._aspect
+        else:
+            h = avail_h
+            w = h * self._aspect
+        return QRectF((self.width() - w) / 2, 6 + (avail_h - h) / 2, w, h)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        selected = self.isChecked()
+        hovered = self.underMouse()
+        border = QColor("#ff7a45") if selected else QColor(
+            "#5d7898" if hovered else "#35475c")
+        painter.setPen(QPen(border, 1.5))
+        painter.setBrush(QColor(255, 122, 69, 28) if selected else QColor("#1c2938"))
+        painter.drawRoundedRect(QRectF(1, 1, self.width() - 2, self.height() - 2),
+                                6, 6)
+
+        page = self._page_rect()
+        preset = slanted_layouts.get(self.preset_id)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor("#dbe5f0") if selected else QColor("#8190a4"))
+        if preset:
+            for cell in preset["cells"]:
+                path = QPainterPath()
+                first = True
+                for x, y in cell:
+                    point = QPointF(page.x() + x * page.width(),
+                                    page.y() + y * page.height())
+                    if first:
+                        path.moveTo(point)
+                        first = False
+                    else:
+                        path.lineTo(point)
+                path.closeSubpath()
+                painter.drawPath(path)
+
+        painter.setPen(QColor("#ff9a70") if selected else QColor("#acb9c8"))
+        font = painter.font()
+        font.setPixelSize(10)
+        font.setBold(selected)
+        painter.setFont(font)
+        painter.drawText(QRectF(2, self.height() - 15, self.width() - 4, 14),
+                         int(Qt.AlignmentFlag.AlignCenter), i18n.tr(self.label))
+
+
+class SlantedPresetStrip(QWidget):
+    """斜切预设画廊：块数固定，多个预设供挑选。"""
+
+    COLUMNS = 4
+    presetChanged = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._value = ""
+        self._buttons: dict[str, SlantedPresetButton] = {}
+        self._group = QButtonGroup(self)
+        self._group.setExclusive(True)
+        self._aspect = "方形 · 1:1"
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        inner = QWidget()
+        grid = QGridLayout(inner)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setSpacing(4)
+        for index, preset in enumerate(slanted_layouts.PRESETS):
+            btn = SlantedPresetButton(preset["id"], preset["label"])
+            self._buttons[preset["id"]] = btn
+            self._group.addButton(btn)
+            grid.addWidget(btn, index // self.COLUMNS, index % self.COLUMNS)
+            btn.clicked.connect(
+                lambda checked, pid=preset["id"]: checked and self._select(pid))
+        outer.addWidget(inner)
+
+    def _select(self, preset_id: str):
+        self._value = preset_id
+        self.presetChanged.emit(preset_id)
+
+    def currentPreset(self) -> str:
+        return self._value
+
+    def setCurrentPreset(self, preset_id: str):
+        btn = self._buttons.get(str(preset_id))
+        if btn is None:
+            return
+        self._value = str(preset_id)
+        btn.setChecked(True)
+
+    def set_aspect(self, aspect_name: str):
+        self._aspect = str(aspect_name)
+        for btn in self._buttons.values():
+            btn.set_aspect(self._aspect)
 
 
 class CollageTemplateStrip(QWidget):
@@ -1030,6 +1157,7 @@ class InspectorDock(QWidget):
         # Tabs split the full feature set into stable, predictable work areas.
         self._tabs = QTabBar()
         self._tabs.addTab("形状")
+        self._tabs.addTab("斜切")
         self._tabs.addTab("文字")
         self._tabs.addTab("FX")
         self._tabs.addTab("图层")
@@ -1094,6 +1222,7 @@ class InspectorDock(QWidget):
         self._inspector_lay = self._shape_lay
         self._build_inspector_sections()
         self._stack.addWidget(shape_scroll)
+        self._stack.addWidget(self._build_slanted_section())
         self._stack.addWidget(text_scroll)
         self._stack.addWidget(fx_scroll)
 
@@ -2352,6 +2481,128 @@ class InspectorDock(QWidget):
         self._collage_layout_section = section
         self._inspector_lay.addWidget(section)
 
+    # ------------------------------------------------------------------
+    # 斜切拼贴（独立 tab）
+    # ------------------------------------------------------------------
+
+    def _build_slanted_section(self) -> QScrollArea:
+        """斜切拼贴页：页面比例 + 固定块数的斜切预设。
+
+        和规整拼贴共用同一套设置（页面比例、颜色、画框），
+        只有分格几何不同：这里用多边形（梯形 / 平行四边形 / 三角形）。
+        """
+        page = QWidget()
+        lay = QVBoxLayout(page)
+        lay.setContentsMargins(12, 10, 12, 10)
+        lay.setSpacing(10)
+
+        title = QLabel("斜切拼贴")
+        title.setObjectName("AccordionTitle")
+        lay.addWidget(title)
+
+        intro = QLabel(
+            "把照片切成斜向分块：梯形、平行四边形、三角形。"
+            "页面比例、画框和颜色与「拼贴」共用。")
+        intro.setObjectName("InspectorHint")
+        intro.setWordWrap(True)
+        lay.addWidget(intro)
+
+        lay.addWidget(self._label("页面比例"))
+        self._slant_orientation = OptionButtonGrid(
+            (("竖版 · 4:5", "竖向"),
+             ("横版 · 16:9", "横向"),
+             ("方形 · 1:1", "方形")),
+            columns=3,
+            tooltips=("竖版页面 · 4:5",
+                      "横版页面 · 16:9",
+                      "方形页面 · 1:1"),
+            parent=self)
+        self._slant_orientation.currentTextChanged.connect(
+            self._on_collage_aspect)
+        lay.addWidget(self._slant_orientation)
+
+        lay.addWidget(self._label("斜切布局"))
+        self._slant_presets = SlantedPresetStrip(self)
+        self._slant_presets.presetChanged.connect(self._on_slanted_preset)
+        lay.addWidget(self._slant_presets)
+
+        self._slant_hint = QLabel("")
+        self._slant_hint.setObjectName("InspectorHint")
+        self._slant_hint.setWordWrap(True)
+        lay.addWidget(self._slant_hint)
+
+        note = QLabel(
+            "斜切分块数量固定（由预设决定），不能像规整布局那样随照片数自适应 —— "
+            "斜向形状自适应容易产生缝隙或重叠。外距和画框宽度仍然生效，"
+            "分块之间靠画框颜色分隔效果最好。")
+        note.setObjectName("InspectorHint")
+        note.setWordWrap(True)
+        lay.addWidget(note)
+        lay.addStretch(1)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setWidget(page)
+        return scroll
+
+    def _on_slanted_preset(self, preset_id: str):
+        """选中一个斜切预设：切到斜切布局并重建页面。"""
+        if self._updating or self._scene is None:
+            return
+        count = slanted_layouts.cell_count(preset_id)
+        self._updating = True
+        try:
+            self._scene.set_collage_layout_setting("photo_count", count)
+        finally:
+            self._updating = False
+        self._scene.set_collage_layout_setting(
+            "layout_type", f"{SLANT_PREFIX}{preset_id}")
+        if self._collage_count is not None and count:
+            self._updating = True
+            try:
+                self._collage_count.setValue(count)
+            finally:
+                self._updating = False
+        # 自己刷一遍 tab 状态，避免依赖调用方是否同步过界面
+        self._configure_tabs_for_page_mode()
+        self._show_tab(self.SLANTED_TAB)
+        self._sync_slanted_controls()
+
+    def _sync_slanted_controls(self):
+        """按当前设置刷新斜切 tab 的选中状态与提示。"""
+        settings = {}
+        if self._scene is not None:
+            try:
+                settings = self._scene.collage_layout_settings()
+            except Exception:
+                settings = {}
+        aspect = str(settings.get("aspect_ratio", "方形 · 1:1"))
+        layout_type = str(settings.get("layout_type", ""))
+        preset_id = ""
+        if layout_type.startswith(SLANT_PREFIX):
+            preset_id = layout_type[len(SLANT_PREFIX):]
+
+        self._updating = True
+        try:
+            if aspect in self.COLLAGE_ASPECTS:
+                self._slant_orientation.setCurrentText(aspect)
+            else:
+                self._slant_orientation.clearSelection()
+            if preset_id:
+                self._slant_presets.setCurrentPreset(preset_id)
+        finally:
+            self._updating = False
+
+        self._slant_presets.set_aspect(aspect)
+        if preset_id:
+            count = slanted_layouts.cell_count(preset_id)
+            self._slant_hint.setText(
+                f"{slanted_layouts.label(preset_id)} · {count} 块")
+        else:
+            self._slant_hint.setText("当前用的是规整拼贴布局，点上面的预设切到斜切。")
+
     def _build_collage_fx_section(self):
         section = AccordionSection("拼贴颜色与画框")
         priority = QLabel(
@@ -2946,9 +3197,10 @@ class InspectorDock(QWidget):
     # ------------------------------------------------------------------
 
     SHAPE_TAB = 0
-    TEXT_TAB = 1
-    FX_TAB = 2
-    LAYERS_TAB = 3
+    SLANTED_TAB = 1
+    TEXT_TAB = 2
+    FX_TAB = 3
+    LAYERS_TAB = 4
 
     def _show_tab(self, index: int):
         """Jump to the tab holding the controls for what was just selected."""
@@ -2965,12 +3217,26 @@ class InspectorDock(QWidget):
         collage = bool(self._scene and self._scene.is_collage_mode())
         comic = bool(self._scene and self._scene.is_manga_mode())
         page_mode = collage or comic
+        slanted = bool(collage and self._scene and self._scene.is_slanted_layout())
         self._tabs.setTabText(self.SHAPE_TAB,
                               "拼贴" if collage else "Comic" if comic else "形状")
+        self._tabs.setTabText(self.SLANTED_TAB, "斜切")
         self._tabs.setTabText(self.TEXT_TAB, "文字")
         self._tabs.setTabText(self.FX_TAB, "所选效果" if page_mode else "FX")
         self._tabs.setTabText(self.LAYERS_TAB, "图层")
         self._tabs.setTabVisible(self.TEXT_TAB, not page_mode)
+        # 「斜切」只在拼贴模式下出现
+        self._tabs.setTabVisible(self.SLANTED_TAB, collage)
+        if collage:
+            self._sync_slanted_controls()
+            # 当前用的是斜切布局就自动停在那页，反之停在「拼贴」页
+            if slanted and self._tabs.currentIndex() not in (
+                    self.FX_TAB, self.LAYERS_TAB):
+                self._show_tab(self.SLANTED_TAB)
+            elif not slanted and self._tabs.currentIndex() == self.SLANTED_TAB:
+                self._show_tab(self.SHAPE_TAB)
+        elif self._tabs.currentIndex() == self.SLANTED_TAB:
+            self._show_tab(self.SHAPE_TAB)
         if collage:
             self._shape_intro_title.setText("照片拼贴")
             self._shape_intro_text.setText(
@@ -2995,6 +3261,7 @@ class InspectorDock(QWidget):
         self._tabs.setTabText(self.FX_TAB, "FX")
         self._tabs.setTabText(self.LAYERS_TAB, "图层")
         self._tabs.setTabVisible(self.TEXT_TAB, True)
+        self._tabs.setTabVisible(self.SLANTED_TAB, False)
         self._shape_intro_title.setText("形状")
         self._shape_intro_text.setText(
             "选择气泡的形状、填充、边框和尾巴。")
