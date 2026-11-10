@@ -19,6 +19,7 @@ from PyQt6.QtGui import (
 from video_player import VideoPlayer, FrameDecodeWorker
 from media_item import MediaItem
 from constants import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
+import ui_state
 
 ALL_MEDIA_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
 
@@ -378,6 +379,17 @@ class PhotoScene(QGraphicsScene):
             "margin": 28,
             "gap": 18,
         }
+        # 读回上次用过的样式与布局（没有记录就用上面的出厂值）。
+        # 用户改过的背景色 / 画框 / 圆角 / 间距 / 外距 / 照片数 / 布局类型
+        # 不该每次启动都丢。
+        self._manga_style = ui_state.load_dict(
+            ui_state.GROUP_MANGA_STYLE, self._manga_style)
+        self._manga_layout_settings = ui_state.load_dict(
+            "ui/manga_layout", self._manga_layout_settings)
+        self._collage_style = ui_state.load_dict(
+            ui_state.GROUP_COLLAGE_STYLE, self._collage_style)
+        self._collage_layout_settings = ui_state.load_dict(
+            ui_state.GROUP_COLLAGE_LAYOUT, self._collage_layout_settings)
         self._fitting    = False   # re-entrancy guard for fit_scene_to_media
 
         self._overlay_layers: list = []            # list[MediaItem]
@@ -978,6 +990,7 @@ class PhotoScene(QGraphicsScene):
         else:
             value = float(value)
         self._manga_style[key] = value
+        ui_state.save_value(ui_state.GROUP_MANGA_STYLE, key, value)
         if key == "page_color" and self._manga_page is not None:
             self._manga_page.setBrush(QBrush(QColor(value)))
         for panel in self._manga_panels:
@@ -1006,6 +1019,7 @@ class PhotoScene(QGraphicsScene):
         if key not in self._manga_layout_settings:
             return
         self._manga_layout_settings[key] = value
+        ui_state.save_value("ui/manga_layout", key, value)
         if key == "show_numbers":
             for panel in self._manga_panels:
                 panel.set_number_guide(
@@ -1431,6 +1445,7 @@ class PhotoScene(QGraphicsScene):
         if key not in self._collage_layout_settings:
             return
         self._collage_layout_settings[key] = value
+        ui_state.save_value(ui_state.GROUP_COLLAGE_LAYOUT, key, value)
         if not self._collage_mode:
             return
         if key in ("photo_count", "layout_type"):
@@ -1491,6 +1506,7 @@ class PhotoScene(QGraphicsScene):
         else:
             value = float(value)
         self._collage_style[key] = value
+        ui_state.save_value(ui_state.GROUP_COLLAGE_STYLE, key, value)
         if key == "page_color" and self._manga_page is not None:
             self._manga_page.setBrush(QBrush(QColor(value)))
         panel_style = self._panel_style()

@@ -1144,6 +1144,23 @@ class InspectorDock(QWidget):
 
     def set_undo_stack(self, stack):
         self._undo_stack = stack
+        # 所有样式改动都会往撤销栈 push 一条命令，借这个信号自动把当前气泡
+        # 的样式记成「新气泡默认值」—— 效果就是记住上次用的颜色和字体。
+        # 不这么做只有手动点「设为默认」才会存，重启就丢。
+        if stack is not None and not getattr(self, "_remember_hooked", False):
+            stack.indexChanged.connect(self._remember_bubble_style)
+            self._remember_hooked = True
+
+    def _remember_bubble_style(self, *_args):
+        """把当前选中气泡的样式存为默认值（新建气泡就用这套）。"""
+        bubble = getattr(self, "_bubble", None)
+        if bubble is None or getattr(self, "_updating", False):
+            return
+        try:
+            bubble_defaults.save_from_bubble(bubble)
+        except Exception:
+            # 记不住也不该影响正常编辑
+            pass
 
     # ------------------------------------------------------------------
     # UI construction
