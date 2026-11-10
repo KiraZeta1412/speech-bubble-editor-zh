@@ -29,6 +29,11 @@ GROUP = "ui/custom_colors"
 SLOTS = 16          # QColorDialog 的自定义色块数量
 RECENT_MAX = 12     # 调色板弹窗里「最近使用」最多显示几个
 
+# 空的自定义色块 Qt 会返回纯白而不是无效值，所以空白槽位和白颜色分不开。
+# 处理办法：抓取时把纯白当成「空位」跳过（除非那正是用户选中的颜色），
+# 已经存过的也一起洗掉，避免「最近使用」里混一堆白块。
+_WHITE = "#ffffffff"
+
 _qt_translator: QTranslator | None = None
 
 
@@ -95,10 +100,17 @@ def save_custom_colors(colors: list[QColor]) -> None:
     settings.beginGroup(GROUP)
     try:
         settings.remove("")
-        for index, color in enumerate(colors[:SLOTS]):
-            if color.isValid():
-                settings.setValue(f"slot{index}",
-                                  color.name(QColor.NameFormat.HexArgb))
+        written = 0
+        seen: set[str] = set()
+        for color in colors:
+            if not color.isValid() or written >= SLOTS:
+                continue
+            key = _hex_key(color)
+            if key in seen:
+                continue          # 同一个颜色不重复存
+            seen.add(key)
+            settings.setValue(f"slot{written}", key)
+            written += 1
     finally:
         settings.endGroup()
     settings.sync()
@@ -119,6 +131,47 @@ def push_recent(color: QColor) -> None:
 # 取色
 # ---------------------------------------------------------------------------
 
+def _hex_key(color: QColor) -> str:
+    return color.name(QColor.NameFormat.HexArgb)
+
+
+def collect_custom_colors(dialog, chosen: QColor,
+                          previous: list[QColor]) -> list[QColor]:
+    """把这次用到的颜色合成新的自定义列表。
+
+    顺序：选中的 → 对话框里用户新加的非白色 → 之前存过的。
+    纯白会被跳过：空白槽位 Qt 返回的就是纯白，混进来会在「最近使用」
+    里显示成一排白块。
+    """
+    out: list[QColor] = []
+    seen: set[str] = set()
+
+    def add(color: QColor) -> None:
+        if not color.isValid():
+            return
+        key = _hex_key(color)
+        if key in seen:
+            return
+        seen.add(key)
+        out.append(QColor(color))
+
+    add(chosen)
+    chosen_key = _hex_key(chosen) if chosen.isValid() else ""
+    for index in range(SLOTS):
+        color = dialog.customColor(index)
+        if not color.isValid():
+            continue
+        key = _hex_key(color)
+        if key == _WHITE and key != chosen_key:
+            continue        # 空位，不是真实数据
+        add(color)
+    for color in previous:
+        if _hex_key(color) == _WHITE and _hex_key(color) != chosen_key:
+            continue        # 洗掉历史遗留的白块
+        add(color)
+    return out[:SLOTS]
+
+
 def pick_color_dialog(initial: QColor, parent=None, title: str = "选取颜色",
                       allow_alpha: bool = True) -> QColor | None:
     """打开取色对话框，并记住自定义颜色。
@@ -127,29 +180,19 @@ def pick_color_dialog(initial: QColor, parent=None, title: str = "选取颜色",
     """
     _ensure_qt_translation()
 
+    previous = load_custom_colors()
     dialog = QColorDialog(QColor(initial) if initial else QColor("#ffffff"),
                           parent)
     dialog.setWindowTitle(title)
     dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
     dialog.setOption(QColorDialog.ColorDialogOption.ShowAlphaChannel,
                      bool(allow_alpha))
-    for index, color in enumerate(load_custom_colors()[:SLOTS]):
+    for index, color in enumerate(previous[:SLOTS]):
         dialog.setCustomColor(index, color)
 
     if dialog.exec() != QColorDialog.DialogCode.Accepted:
         return None
 
-    # 对话框会把用户新加的色块放进同样的槽位，读回来存下
-    captured: list[QColor] = []
-    for index in range(SLOTS):
-        color = dialog.customColor(index)
-        if color.isValid():
-            captured.append(color)
     chosen = dialog.currentColor()
-    if chosen.isValid():
-        key = chosen.name(QColor.NameFormat.HexArgb)
-        captured = [c for c in captured
-                    if c.name(QColor.NameFormat.HexArgb) != key]
-        captured.insert(0, QColor(chosen))
-    save_custom_colors(captured[:SLOTS])
+    save_custom_colors(collect_custom_colors(dialog, chosen, previous))
     return chosen if chosen.isValid() else None
