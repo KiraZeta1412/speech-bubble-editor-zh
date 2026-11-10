@@ -32,6 +32,7 @@ from bubble import BubbleItem, TEXT_PRESETS, TAIL_SHAPES
 from media_item import MediaItem
 from redaction import (RedactionItem, STYLE_MOSAIC, STYLE_BLUR, STYLE_FILL)
 from speedlines import SpeedLinesItem
+import colorpicker
 from undo_commands import (
     TextChangeCommand, StyleChangeCommand, FontChangeCommand,
     FillColorChangeCommand, BorderColorChangeCommand,
@@ -607,6 +608,25 @@ def pick_color(anchor: QWidget, initial: QColor, parent: QWidget,
             grid.addWidget(btn, row, col)
     lay.addLayout(grid)
 
+    # 「最近使用」：之前自定义过的颜色，直接点就能用，不用再进对话框
+    recent = colorpicker.load_custom_colors()[:colorpicker.RECENT_MAX]
+    if recent:
+        recent_label = QLabel("最近使用")
+        recent_label.setObjectName("InspectorHint")
+        lay.addWidget(recent_label)
+        recent_grid = QGridLayout()
+        recent_grid.setSpacing(4)
+        for index, color in enumerate(recent):
+            btn = SwatchButton(QColor(color))
+
+            def choose_recent(_checked=False, c=QColor(color)):
+                result["color"] = c
+                menu.close()
+
+            btn.clicked.connect(choose_recent)
+            recent_grid.addWidget(btn, index // 8, index % 8)
+        lay.addLayout(recent_grid)
+
     custom = QPushButton("自定义…")
     custom.setObjectName("LayerActionButton")
     custom.setMinimumHeight(26)
@@ -624,11 +644,16 @@ def pick_color(anchor: QWidget, initial: QColor, parent: QWidget,
     menu.exec(anchor.mapToGlobal(anchor.rect().bottomLeft()))
 
     if result.get("custom"):
-        opts = (QColorDialog.ColorDialogOption.ShowAlphaChannel
-                if allow_alpha else QColorDialog.ColorDialogOption(0))
-        color = QColorDialog.getColor(initial, parent, "选取颜色", opts)
-        return color if color.isValid() else None
-    return result.get("color")
+        color = colorpicker.pick_color_dialog(initial, parent, "选取颜色",
+                                              allow_alpha=allow_alpha)
+        if color is not None and color.isValid():
+            colorpicker.push_recent(color)
+            return color
+        return None
+    picked = result.get("color")
+    if picked is not None and picked.isValid():
+        colorpicker.push_recent(picked)
+    return picked
 
 TAIL_POSITIONS = (
     "左上", "顶部居中", "右上", "右",
@@ -1554,9 +1579,9 @@ class InspectorDock(QWidget):
     def _on_redact_fill_color(self):
         if not self._redact_item or self._updating:
             return
-        color = QColorDialog.getColor(self._redact_item.get_fill_color(), self,
-                                      "选择填充颜色")
-        if color.isValid():
+        color = colorpicker.pick_color_dialog(
+            self._redact_item.get_fill_color(), self, "选择填充颜色")
+        if color is not None and color.isValid():
             self._redact_item.set_fill_color(color)
             _set_btn_color(self._redact_fill_color_btn, color)
             self._redact_fill_hex.setText(color.name().upper())
@@ -4166,10 +4191,9 @@ class InspectorDock(QWidget):
             self.dual_border_changed.emit(self._dual_border_color_val, width)
 
     def _on_dual_border_color(self):
-        color = QColorDialog.getColor(
-            self._dual_border_color_val, self, "分隔线颜色"
-        )
-        if color.isValid():
+        color = colorpicker.pick_color_dialog(
+            self._dual_border_color_val, self, "分隔线颜色")
+        if color is not None and color.isValid():
             self._dual_border_color_val = color
             _set_btn_color(self._btn_dual_border_color, color)
             if self._chk_dual_border.isChecked():

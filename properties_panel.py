@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QColor, QFont, QUndoStack
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 
+import colorpicker
 from undo_commands import (
     StyleChangeCommand, FontChangeCommand,
     FillColorChangeCommand, BorderColorChangeCommand,
@@ -502,9 +503,9 @@ class PropertiesPanel(QWidget):
     def _on_text_color(self):
         if not self._bubble or not self._undo_stack:
             return
-        color = QColorDialog.getColor(
+        color = colorpicker.pick_color_dialog(
             self._bubble.get_text_color(), self, "文字颜色")
-        if color.isValid():
+        if color is not None and color.isValid():
             old = self._bubble.get_text_color()
             self._undo_stack.push(TextColorChangeCommand(self._bubble, old, color))
             _set_btn_color(self._btn_text_color, color)
@@ -513,10 +514,9 @@ class PropertiesPanel(QWidget):
         if not self._bubble or not self._undo_stack:
             return
         current = self._bubble.get_fill_color()
-        color = QColorDialog.getColor(
-            current, self, "填充颜色",
-            QColorDialog.ColorDialogOption.ShowAlphaChannel)
-        if color.isValid():
+        color = colorpicker.pick_color_dialog(
+            current, self, "填充颜色", allow_alpha=True)
+        if color is not None and color.isValid():
             self._undo_stack.push(FillColorChangeCommand(self._bubble, current, color))
             _set_btn_color(self._btn_fill, color)
             pct = round(color.alpha() * 100 / 255)
@@ -538,8 +538,8 @@ class PropertiesPanel(QWidget):
         if not self._bubble or not self._undo_stack:
             return
         old = self._bubble.get_border_color()
-        color = QColorDialog.getColor(old, self, "边框颜色")
-        if color.isValid():
+        color = colorpicker.pick_color_dialog(old, self, "边框颜色")
+        if color is not None and color.isValid():
             self._undo_stack.push(BorderColorChangeCommand(self._bubble, old, color))
             _set_btn_color(self._btn_border_color, color)
 
@@ -589,9 +589,9 @@ class PropertiesPanel(QWidget):
             self.dual_border_changed.emit(self._dual_border_color_val, width)
 
     def _on_dual_border_color(self):
-        color = QColorDialog.getColor(
+        color = colorpicker.pick_color_dialog(
             self._dual_border_color_val, self, "分隔线颜色")
-        if color.isValid():
+        if color is not None and color.isValid():
             self._dual_border_color_val = color
             _set_btn_color(self._btn_dual_border_color, color)
             if self._chk_dual_border.isChecked():
